@@ -1,0 +1,175 @@
+/* Variables de paleta de colores (Tonos Azules) */
+:root {
+    --primary-blue: #1E3A8A;   /* Azul marino profundo para encabezados */
+    --accent-blue: #2563EB;    /* Azul eléctrico para botones y estados activos */
+    --light-blue: #EFF6FF;     /* Fondo azul muy claro para contraste */
+    --bg-gray: #F3F4F6;        /* Fondo general limpio */
+    --text-dark: #1F2937;      /* Texto principal oscurecido */
+    --border-color: #E5E7EB;   /* Bordes sutiles */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-gray);
+    color: var(--text-dark);
+}
+
+/* Encabezado */
+.main-header {
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.main-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+/* Contenedor Principal */
+.container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.table-section {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+/* Botones */
+.btn-primary {
+    background-color: var(--accent-blue);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #1D4ED8;
+}
+
+/* Tabla Estilo ConneXtion */
+.table-responsive {
+    overflow-x: auto; /* Garantiza la lectura fluida en móviles */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    background-color: var(--light-blue);
+    color: var(--primary-blue);
+    padding: 12px 15px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+}
+
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: top;
+}
+
+tr:hover {
+    background-color: #F9FAFB;
+}
+
+/* Badges de Estado */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-in_progress {
+    background-color: #FEF3C7;
+    color: #D97706;
+} /* Amarillo/Naranja */
+.status-open {
+    background-color: #D1FAE5;
+    color: #065F46;
+}        /* Verde */
+
+.text-center {
+    text-align: center;
+}
+.ticket-desc {
+    font-size: 0.9rem;
+    color: #6B7280;
+    margin-top: 4px;
+}
+
+
+.login-container {
+    max-width: 400px;
+    margin: 60px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+.tab-buttons {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: #6B7280;
+}
+.tab-btn.active {
+    color: var(--primary-blue);
+    border-bottom: 3px solid var(--accent-blue);
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+.hidden {
+    display: none;
+}

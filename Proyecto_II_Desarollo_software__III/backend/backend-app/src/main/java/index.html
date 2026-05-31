@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneXtion HelpDesk - Panel de Soporte</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <h1>ConneXtion HelpDesk</h1>
+        <p>Mesa de Servicio Técnico</p>
+    </header>
+
+    <main class="container">
+        <section class="table-section">
+            <div class="section-header">
+                <h2>Solicitudes Registradas</h2>
+                <button id="btn-refresh" class="btn-primary">Actualizar Lista</button>
+            </div>
+
+            <div class="table-responsive">
+                <table id="tickets-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Título / Descripción</th>
+                            <th>Prioridad</th>
+                            <th>Estado</th>
+                            <th>Cliente</th>
+                            <th>Técnico Asignado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tickets-body">
+                        <tr>
+                            <td colspan="6" class="text-center">Cargando solicitudes...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
