@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneXtion - Panel de Soporte</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">ConneXtion Soporte</div>
+        <div class="navbar-user">
+            <span>Bienvenido, <strong id="nombre-usuario"></strong></span>
+            <span id="rol-usuario" class="badge-rol"></span>
+            <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h2>Solicitudes Registradas</h2>
+            <div class="filtros">
+                <select id="filtro-estado" onchange="filtrarSolicitudes()">
+                    <option value="">Todos los estados</option>
+                    <option value="INGRESADO">Ingresado</option>
+                    <option value="ASIGNADO">Asignado</option>
+                    <option value="EN_PROGRESO">En Progreso</option>
+                    <option value="RESUELTO">Resuelto</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="mensaje-vacio" class="mensaje-vacio oculto">
+            No hay solicitudes registradas.
+        </div>
+
+        <div class="tabla-container">
+            <table id="tabla-solicitudes">
+                <thead>
+                    <tr>
+                        <th># Solicitud</th>
+                        <th>Cliente</th>
+                        <th>Servicio</th>
+                        <th>Clasificación</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo-tabla">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        let todasSolicitudes = [];
+
+        const usuario = Ui.verificarSesion();
+        if (usuario) {
+            Ui.mostrarNombreUsuario(usuario);
+            document.getElementById("rol-usuario").textContent = usuario.role;
+
+            Api.obtenerTodasSolicitudes()
+            .then(solicitudes => {
+                todasSolicitudes = solicitudes;
+                renderizarTabla(solicitudes);
+            })
+            .catch(() => {
+                document.getElementById("mensaje-vacio").textContent = "Error al cargar solicitudes.";
+                document.getElementById("mensaje-vacio").classList.remove("oculto");
+            });
+        }
+
+        function filtrarSolicitudes() {
+            const filtro = document.getElementById("filtro-estado").value;
+            const filtradas = filtro
+                ? todasSolicitudes.filter(s => s.status === filtro)
+                : todasSolicitudes;
+            renderizarTabla(filtradas);
+        }
+
+        function renderizarTabla(solicitudes) {
+            const cuerpo = document.getElementById("cuerpo-tabla");
+            cuerpo.innerHTML = "";
+
+            if (solicitudes.length === 0) {
+                document.getElementById("mensaje-vacio").classList.remove("oculto");
+                return;
+            }
+
+            document.getElementById("mensaje-vacio").classList.add("oculto");
+
+            solicitudes.forEach(s => {
+                const fila = document.createElement("tr");
+                fila.innerHTML = `
+                    <td>#${s.id}</td>
+                    <td>${s.clientName || "N/A"}</td>
+                    <td>${s.service ? s.service.name : "N/A"}</td>
+                    <td><span class="badge-clasificacion ${s.classification ? s.classification.toLowerCase() : ''}">${s.classification || "Media"}</span></td>
+                    <td><span class="badge-estado ${s.status.toLowerCase()}">${s.status}</span></td>
+                    <td>${new Date(s.issueTimestamp).toLocaleDateString()}</td>
+                    <td><a href="detalle.html?id=${s.id}" class="btn-detalle">Ver detalle</a></td>
+                `;
+                cuerpo.appendChild(fila);
+            });
+        }
+    </script>
+</body>
+</html>
