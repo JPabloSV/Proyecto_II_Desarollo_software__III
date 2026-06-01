@@ -11,7 +11,7 @@ if (loginForm) {
 
         mensajeError.classList.add("oculto");
 
-        fetch(`${API_URL}/users/login`, {
+        fetch(`${API_URL}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
@@ -19,6 +19,11 @@ if (loginForm) {
         .then(res => res.json())
         .then(data => {
             if (data.id) {
+                if (data.role !== "CLIENT") {
+                    mensajeError.textContent = "Esta página es solo para clientes.";
+                    mensajeError.classList.remove("oculto");
+                    return;
+                }
                 sessionStorage.setItem("usuario", JSON.stringify(data));
                 window.location.href = "dashboard.html";
             } else {
@@ -38,12 +43,12 @@ if (registroForm) {
     registroForm.addEventListener("submit", function(e) {
         e.preventDefault();
 
-        const serviciosSeleccionados = [];
+        const serviceIds = [];
         document.querySelectorAll(".servicio-item input:checked").forEach(cb => {
-            serviciosSeleccionados.push({ id: parseInt(cb.value) });
+            serviceIds.push(parseInt(cb.value));
         });
 
-        if (serviciosSeleccionados.length === 0) {
+        if (serviceIds.length === 0) {
             const error = document.getElementById("mensaje-error");
             error.textContent = "Debes seleccionar al menos un servicio.";
             error.classList.remove("oculto");
@@ -52,15 +57,11 @@ if (registroForm) {
 
         const usuario = {
             name: document.getElementById("nombre").value,
-            firstSurname: document.getElementById("primerApellido").value,
-            secondSurname: document.getElementById("segundoApellido").value,
             email: document.getElementById("email").value,
             password: document.getElementById("password").value,
             phone: document.getElementById("telefono").value,
             address: document.getElementById("direccion").value,
-            secondContact: document.getElementById("segundoContacto").value,
-            role: "CLIENT",
-            services: serviciosSeleccionados
+            serviceIds: serviceIds
         };
 
         fetch(`${API_URL}/users/register`, {
@@ -70,7 +71,7 @@ if (registroForm) {
         })
         .then(res => res.json())
         .then(data => {
-            if (data.id) {
+            if (data.userId) {
                 const exito = document.getElementById("mensaje-exito");
                 exito.textContent = "Registro exitoso. Redirigiendo...";
                 exito.classList.remove("oculto");

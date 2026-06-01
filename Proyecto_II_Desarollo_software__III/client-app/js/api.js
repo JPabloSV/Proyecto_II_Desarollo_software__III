@@ -2,7 +2,7 @@ const API_URL = "http://localhost:8080/api";
 
 const Api = {
     login: function(email, password) {
-        return fetch(`${API_URL}/users/login`, {
+        return fetch(`${API_URL}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
@@ -17,24 +17,29 @@ const Api = {
         }).then(res => res.json());
     },
 
-    obtenerSolicitudes: function(clienteId) {
-        return fetch(`${API_URL}/issues?clientId=${clienteId}`)
+    obtenerServicios: function() {
+        return fetch(`${API_URL}/services`)
             .then(res => res.json());
     },
 
-    crearSolicitud: function(solicitud) {
-        return fetch(`${API_URL}/issues`, {
+    obtenerTickets: function(clienteId) {
+        return fetch(`${API_URL}/tickets`)
+            .then(res => res.json())
+            .then(tickets => tickets.filter(t => t.client && t.client.id === clienteId));
+    },
+
+    crearTicket: function(ticket) {
+        return fetch(`${API_URL}/tickets`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(solicitud)
+            body: JSON.stringify(ticket)
         }).then(res => res.json());
     },
 
-    agregarComentario: function(issueId, comentario) {
-        return fetch(`${API_URL}/issues/${issueId}/comments`, {
+    logout: function() {
+        return fetch(`${API_URL}/logout`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(comentario)
+            headers: { "Content-Type": "application/json" }
         }).then(res => res.json());
     }
 };
