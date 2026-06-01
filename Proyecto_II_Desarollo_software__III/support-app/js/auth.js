@@ -11,7 +11,7 @@ if (loginForm) {
 
         mensajeError.classList.add("oculto");
 
-        fetch(`${API_URL}/users/login`, {
+        fetch(`${API_URL}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
