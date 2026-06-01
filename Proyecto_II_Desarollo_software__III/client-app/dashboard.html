@@ -50,7 +50,7 @@
         const usuario = Ui.verificarSesion();
         if (usuario) {
             Ui.mostrarNombreUsuario(usuario);
-            Api.obtenerSolicitudes(usuario.id)
+            Api.obtenerTickets(usuario.id)
             .then(solicitudes => {
                 const cuerpo = document.getElementById("cuerpo-tabla");
                 if (solicitudes.length === 0) {
