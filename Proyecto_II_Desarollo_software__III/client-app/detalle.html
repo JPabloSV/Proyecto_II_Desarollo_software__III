@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneXtion - Detalle de Solicitud</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">ConneXtion</div>
+        <div class="navbar-user">
+            <span>Bienvenido, <strong id="nombre-usuario"></strong></span>
+            <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h2>Detalle de Solicitud</h2>
+            <button onclick="window.location.href='dashboard.html'" class="btn-secondary">
+                ← Volver
+            </button>
+        </div>
+
+        <div id="mensaje-error" class="mensaje-error oculto"></div>
+
+        <!-- Tarjeta principal -->
+        <div class="detalle-card">
+            <div class="detalle-header">
+                <div>
+                    <span id="ticket-id" class="ticket-id"></span>
+                    <h3 id="ticket-titulo"></h3>
+                </div>
+                <span id="ticket-estado" class="badge-estado"></span>
+            </div>
+
+            <div class="detalle-grid">
+                <div class="detalle-campo">
+                    <label>Categoría</label>
+                    <span id="ticket-categoria"></span>
+                </div>
+                <div class="detalle-campo">
+                    <label>Prioridad</label>
+                    <span id="ticket-prioridad" class="badge-prioridad"></span>
+                </div>
+                <div class="detalle-campo">
+                    <label>Fecha de creación</label>
+                    <span id="ticket-fecha"></span>
+                </div>
+                <div class="detalle-campo">
+                    <label>Técnico asignado</label>
+                    <span id="ticket-tecnico"></span>
+                </div>
+            </div>
+
+            <div class="detalle-descripcion">
+                <label>Descripción</label>
+                <p id="ticket-descripcion"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        const usuario = Ui.verificarSesion();
+        if (usuario) {
+            Ui.mostrarNombreUsuario(usuario);
+            cargarTicket();
+        }
+
+        function cargarTicket() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get("id");
+
+            if (!id) {
+                Ui.mostrarError("mensaje-error", "No se especificó una solicitud.");
+                return;
+            }
+
+            Api.obtenerTickets(usuario.id)
+                .then(tickets => {
+                    const ticket = tickets.find(t => t.id == id);
+                    if (!ticket) {
+                        Ui.mostrarError("mensaje-error", "Solicitud no encontrada.");
+                        return;
+                    }
+                    renderizarDetalle(ticket);
+                })
+                .catch(() => {
+                    Ui.mostrarError("mensaje-error", "Error al cargar la solicitud.");
+                });
+        }
+
+        function renderizarDetalle(t) {
+            document.getElementById("ticket-id").textContent = "#" + t.id;
+            document.getElementById("ticket-titulo").textContent = t.title;
+            document.getElementById("ticket-categoria").textContent = t.category ? t.category.name : "N/A";
+            document.getElementById("ticket-fecha").textContent = t.createdAt ? new Date(t.createdAt).toLocaleString() : "N/A";
+            document.getElementById("ticket-descripcion").textContent = t.description;
+            document.getElementById("ticket-tecnico").textContent = t.technician ? t.technician.name : "Sin asignar";
+
+            const estadoEl = document.getElementById("ticket-estado");
+            estadoEl.textContent = traducirEstado(t.status);
+            estadoEl.className = "badge-estado " + t.status.toLowerCase();
+
+            const prioridadEl = document.getElementById("ticket-prioridad");
+            prioridadEl.textContent = t.priority || "N/A";
+            prioridadEl.className = "badge-prioridad " + (t.priority ? t.priority.toLowerCase() : "");
+        }
+
+        function traducirEstado(status) {
+            const estados = {
+                "OPEN": "Abierto",
+                "IN_PROGRESS": "En Progreso",
+                "RESOLVED": "Resuelto",
+                "CLOSED": "Cerrado"
+            };
+            return estados[status] || status;
+        }
+    </script>
+</body>
+</html>
