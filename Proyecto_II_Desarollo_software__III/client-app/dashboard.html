@@ -1,79 +1,79 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConneXtion - Mis Solicitudes</title>
-    <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="navbar-brand">ConneXtion</div>
-        <div class="navbar-user">
-            <span>Bienvenido, <strong id="nombre-usuario"></strong></span>
-            <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
-        </div>
-    </nav>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ConneXtion - Mis Solicitudes</title>
+        <link rel="stylesheet" href="css/styles.css">
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="navbar-brand">ConneXtion</div>
+            <div class="navbar-user">
+                <span>Bienvenido, <strong id="nombre-usuario"></strong></span>
+                <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+            </div>
+        </nav>
 
-    <div class="dashboard-container">
-        <div class="dashboard-header">
-            <h2>Mis Solicitudes</h2>
-            <button onclick="window.location.href='nueva-solicitud.html'" class="btn-primary">
-                + Nueva Solicitud
-            </button>
+        <div class="dashboard-container">
+            <div class="dashboard-header">
+                <h2>Mis Solicitudes</h2>
+                <button onclick="window.location.href = 'nueva-solicitud.html'" class="btn-primary">
+                    + Nueva Solicitud
+                </button>
+            </div>
+
+            <div id="mensaje-vacio" class="mensaje-vacio oculto">
+                No tenés solicitudes registradas.
+            </div>
+
+            <div class="tabla-container">
+                <table id="tabla-solicitudes">
+                    <thead>
+                        <tr>
+                            <th># Solicitud</th>
+                            <th>Servicio</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-tabla">
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div id="mensaje-vacio" class="mensaje-vacio oculto">
-            No tenés solicitudes registradas.
-        </div>
-
-        <div class="tabla-container">
-            <table id="tabla-solicitudes">
-                <thead>
-                    <tr>
-                        <th># Solicitud</th>
-                        <th>Servicio</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th>Detalle</th>
-                    </tr>
-                </thead>
-                <tbody id="cuerpo-tabla">
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <script src="js/api.js"></script>
-    <script src="js/ui.js"></script>
-    <script>
-        const usuario = Ui.verificarSesion();
-        if (usuario) {
-            Ui.mostrarNombreUsuario(usuario);
-            Api.obtenerTickets(usuario.id)
-            .then(solicitudes => {
-                const cuerpo = document.getElementById("cuerpo-tabla");
-                if (solicitudes.length === 0) {
-                    document.getElementById("mensaje-vacio").classList.remove("oculto");
-                    return;
-                }
-                solicitudes.forEach(s => {
-                    const fila = document.createElement("tr");
-                    fila.innerHTML = `
-                        <td>#${s.id}</td>
-                        <td>${s.service ? s.service.name : "N/A"}</td>
-                        <td>${new Date(s.registerTimestamp).toLocaleDateString()}</td>
-                        <td><span class="badge-estado ${s.status.toLowerCase()}">${s.status}</span></td>
-                        <td><a href="detalle.html?id=${s.id}" class="btn-detalle">Ver</a></td>
-                    `;
-                    cuerpo.appendChild(fila);
-                });
-            })
-            .catch(() => {
-                document.getElementById("mensaje-vacio").textContent = "Error al cargar solicitudes.";
-                document.getElementById("mensaje-vacio").classList.remove("oculto");
-            });
-        }
-    </script>
-</body>
+        <script src="js/api.js"></script>
+        <script src="js/ui.js"></script>
+        <script>
+                    const usuario = Ui.verificarSesion();
+                    if (usuario) {
+                        Ui.mostrarNombreUsuario(usuario);
+                        Api.obtenerTickets(usuario.id)
+                                .then(solicitudes => {
+                                    const cuerpo = document.getElementById("cuerpo-tabla");
+                                    if (solicitudes.length === 0) {
+                                        document.getElementById("mensaje-vacio").classList.remove("oculto");
+                                        return;
+                                    }
+                                    solicitudes.forEach(s => {
+                                        const fila = document.createElement("tr");
+                                        fila.innerHTML = `
+                            <td>#${s.id}</td>
+                            <td>${s.category ? s.category.name : "N/A"}</td>
+                            <td>${s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A"}</td>
+                            <td><span class="badge-estado ${s.status.toLowerCase()}">${s.status}</span></td>
+                            <td><a href="detalle.html?id=${s.id}" class="btn-detalle">Ver</a></td>
+                        `;
+                                        cuerpo.appendChild(fila);
+                                    });
+                                })
+                                .catch(() => {
+                                    document.getElementById("mensaje-vacio").textContent = "Error al cargar solicitudes.";
+                                    document.getElementById("mensaje-vacio").classList.remove("oculto");
+                                });
+                    }
+        </script>
+    </body>
 </html>

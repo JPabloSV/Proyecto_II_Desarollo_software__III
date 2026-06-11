@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneXtion - Nueva Solicitud</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">ConneXtion</div>
+        <div class="navbar-user">
+            <span>Bienvenido, <strong id="nombre-usuario"></strong></span>
+            <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h2>Nueva Solicitud</h2>
+            <button onclick="window.location.href='dashboard.html'" class="btn-secondary">
+                ← Volver
+            </button>
+        </div>
+
+        <div class="form-card">
+            <div id="mensaje-error" class="mensaje-error oculto"></div>
+            <div id="mensaje-exito" class="mensaje-exito oculto"></div>
+
+            <form id="form-ticket">
+
+                <div class="campo">
+                    <label for="titulo">Título <span class="requerido">*</span></label>
+                    <input type="text" id="titulo" placeholder="Describe brevemente el problema" maxlength="150" required>
+                </div>
+
+                <div class="campo">
+                    <label for="categoria">Categoría <span class="requerido">*</span></label>
+                    <select id="categoria" required>
+                        <option value="">— Seleccioná una categoría —</option>
+                        <option value="1">Facturación</option>
+                        <option value="2">Conectividad</option>
+                        <option value="3">Hardware</option>
+                        <option value="4">Software</option>
+                        <option value="5">Otro</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="prioridad">Prioridad <span class="requerido">*</span></label>
+                    <select id="prioridad" required>
+                        <option value="">— Seleccioná la prioridad —</option>
+                        <option value="LOW">Baja</option>
+                        <option value="MEDIUM">Media</option>
+                        <option value="HIGH">Alta</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="descripcion">Descripción <span class="requerido">*</span></label>
+                    <textarea id="descripcion" rows="5"
+                        placeholder="Explicá el problema con el mayor detalle posible..."
+                        maxlength="1000" required></textarea>
+                </div>
+
+                <div class="form-acciones">
+                    <button type="button" onclick="window.location.href='dashboard.html'" class="btn-secondary">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-enviar" class="btn-primary">
+                        Enviar solicitud
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        // Verificar sesión al cargar
+        const usuario = Ui.verificarSesion();
+        if (usuario) {
+            Ui.mostrarNombreUsuario(usuario);
+        }
+
+        // Manejar envío del formulario
+        document.getElementById("form-ticket").addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            const titulo      = document.getElementById("titulo").value.trim();
+            const categoriaId = document.getElementById("categoria").value;
+            const prioridad   = document.getElementById("prioridad").value;
+            const descripcion = document.getElementById("descripcion").value.trim();
+
+            // Ocultar mensajes anteriores
+            document.getElementById("mensaje-error").classList.add("oculto");
+            document.getElementById("mensaje-exito").classList.add("oculto");
+
+            // Validación
+            if (!titulo || !categoriaId || !prioridad || !descripcion) {
+                Ui.mostrarError("mensaje-error", "Por favor completá todos los campos obligatorios.");
+                return;
+            }
+
+            const ticketData = {
+                title:       titulo,
+                description: descripcion,
+                priority:    prioridad,
+                client:      { id: usuario.id },
+                category:    { id: parseInt(categoriaId) }
+            };
+
+            // Deshabilitar botón mientras se envía
+            const btnEnviar = document.getElementById("btn-enviar");
+            btnEnviar.disabled = true;
+            btnEnviar.textContent = "Enviando...";
+
+            Api.crearTicket(ticketData)
+                .then(data => {
+                    if (data && data.id) {
+                        const exito = document.getElementById("mensaje-exito");
+                        exito.textContent = "✓ Solicitud #" + data.id + " creada exitosamente. Redirigiendo...";
+                        exito.classList.remove("oculto");
+                        setTimeout(() => {
+                            window.location.href = "dashboard.html";
+                        }, 2000);
+                    } else {
+                        Ui.mostrarError("mensaje-error", data.message || "No se pudo crear la solicitud.");
+                        btnEnviar.disabled = false;
+                        btnEnviar.textContent = "Enviar solicitud";
+                    }
+                })
+                .catch(() => {
+                    Ui.mostrarError("mensaje-error", "No se pudo conectar con el servidor.");
+                    btnEnviar.disabled = false;
+                    btnEnviar.textContent = "Enviar solicitud";
+                });
+        });
+    </script>
+</body>
+</html>

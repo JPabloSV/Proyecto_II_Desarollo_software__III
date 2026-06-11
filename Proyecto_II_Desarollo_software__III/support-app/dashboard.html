@@ -22,10 +22,10 @@
             <div class="filtros">
                 <select id="filtro-estado" onchange="filtrarSolicitudes()">
                     <option value="">Todos los estados</option>
-                    <option value="INGRESADO">Ingresado</option>
-                    <option value="ASIGNADO">Asignado</option>
-                    <option value="EN_PROGRESO">En Progreso</option>
-                    <option value="RESUELTO">Resuelto</option>
+                    <option value="OPEN">Abierto</option>
+                    <option value="IN_PROGRESS">En Progreso</option>
+                    <option value="RESOLVED">Resuelto</option>
+                    <option value="CLOSED">Cerrado</option>
                 </select>
             </div>
         </div>
@@ -40,8 +40,8 @@
                     <tr>
                         <th># Solicitud</th>
                         <th>Cliente</th>
-                        <th>Servicio</th>
-                        <th>Clasificación</th>
+                        <th>Categoría</th>
+                        <th>Prioridad</th>
                         <th>Estado</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
@@ -63,7 +63,7 @@
             Ui.mostrarNombreUsuario(usuario);
             document.getElementById("rol-usuario").textContent = usuario.role;
 
-            Api.obtenerTodasSolicitudes()
+            Api.obtenerTodosTickets()
             .then(solicitudes => {
                 todasSolicitudes = solicitudes;
                 renderizarTabla(solicitudes);
@@ -97,15 +97,25 @@
                 const fila = document.createElement("tr");
                 fila.innerHTML = `
                     <td>#${s.id}</td>
-                    <td>${s.clientName || "N/A"}</td>
-                    <td>${s.service ? s.service.name : "N/A"}</td>
-                    <td><span class="badge-clasificacion ${s.classification ? s.classification.toLowerCase() : ''}">${s.classification || "Media"}</span></td>
-                    <td><span class="badge-estado ${s.status.toLowerCase()}">${s.status}</span></td>
-                    <td>${new Date(s.issueTimestamp).toLocaleDateString()}</td>
+                    <td>${s.client ? s.client.name : "N/A"}</td>
+                    <td>${s.category ? s.category.name : "N/A"}</td>
+                    <td><span class="badge-prioridad ${s.priority ? s.priority.toLowerCase() : ''}">${s.priority || "N/A"}</span></td>
+                    <td><span class="badge-estado ${s.status.toLowerCase()}">${traducirEstado(s.status)}</span></td>
+                    <td>${s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A"}</td>
                     <td><a href="detalle.html?id=${s.id}" class="btn-detalle">Ver detalle</a></td>
                 `;
                 cuerpo.appendChild(fila);
             });
+        }
+
+        function traducirEstado(status) {
+            const estados = {
+                "OPEN": "Abierto",
+                "IN_PROGRESS": "En Progreso",
+                "RESOLVED": "Resuelto",
+                "CLOSED": "Cerrado"
+            };
+            return estados[status] || status;
         }
     </script>
 </body>
