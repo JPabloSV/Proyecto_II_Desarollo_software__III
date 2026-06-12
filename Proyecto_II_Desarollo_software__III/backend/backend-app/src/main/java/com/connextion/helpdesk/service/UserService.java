@@ -24,6 +24,7 @@ public class UserService {
     }
 
     public User createUser(User user) {
+        // Revisa que en tu UserRepository tengas declarado: Optional<User> findByEmail(String email);
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new RuntimeException("Email already registered!");
         }

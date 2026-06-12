@@ -530,3 +530,28 @@ tr:hover td {
     background-color: #f5f5f5;
     color: #616161;
 }
+
+.badge-estado.abierto {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.badge-estado.asignado {
+    background-color: #fff8e1;
+    color: #f57f17;
+}
+
+.badge-estado.en_proceso {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.badge-estado.resuelto {
+    background-color: #f3e5f5;
+    color: #6a1b9a;
+}
+
+.badge-estado.cerrado {
+    background-color: #f5f5f5;
+    color: #616161;
+}

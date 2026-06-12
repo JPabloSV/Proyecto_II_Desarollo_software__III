@@ -4,9 +4,13 @@
  */
 package com.connextion.helpdesk.model;
 
+import com.connextion.helpdesk.model.enums.TicketPriority;
+import com.connextion.helpdesk.model.enums.TicketStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -26,12 +30,17 @@ public class Ticket {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
+    // CAMBIO 1: Uso de Enum para controlar de forma estricta los estados del flujo en SQL Server
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private String status; // e.g., "OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"
+    private TicketStatus status = TicketStatus.ABIERTO; // Estado por defecto al crearse
 
+    // CAMBIO 2: Uso de Enum para clasificar la prioridad de atención
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String priority; // e.g., "LOW", "MEDIUM", "HIGH"
+    private TicketPriority priority;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -41,24 +50,30 @@ public class Ticket {
 
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
-    @JsonIgnoreProperties({"createdTickets", "assignedTickets"}) // <-- Evita que vuelva a jalar las listas
+    @JsonIgnoreProperties({"createdTickets", "assignedTickets"})
     private User client;
 
     @ManyToOne
     @JoinColumn(name = "technician_id")
-    @JsonIgnoreProperties({"createdTickets", "assignedTickets"}) // <-- Evita que vuelva a jalar las listas
+    @JsonIgnoreProperties({"createdTickets", "assignedTickets"})
     private User technician;
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonIgnoreProperties("tickets") // <-- Evita que la categoría vuelva a listar sus tickets en este punto
+    @JsonIgnoreProperties("tickets")
     private Category category;
+
+    // CAMBIO 3: Relación bidireccional para extraer la bitácora de notas directamente desde el ticket
+    @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("ticket") // Evita recursividad infinita al serializar a JSON
+    private List<Comment> comments = new ArrayList<>();
 
     // Constructores
     public Ticket() {
     }
 
-    public Ticket(String title, String description, String status, String priority, User client, Category category) {
+    // Constructor actualizado con los nuevos tipos Enum
+    public Ticket(String title, String description, TicketStatus status, TicketPriority priority, User client, Category category) {
         this.title = title;
         this.description = description;
         this.status = status;
@@ -67,7 +82,7 @@ public class Ticket {
         this.category = category;
     }
 
-    // Getters y Setters
+    // Getters y Setters actualizados
     public Long getId() {
         return id;
     }
@@ -92,19 +107,19 @@ public class Ticket {
         this.description = description;
     }
 
-    public String getStatus() {
+    public TicketStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(TicketStatus status) {
         this.status = status;
     }
 
-    public String getPriority() {
+    public TicketPriority getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(TicketPriority priority) {
         this.priority = priority;
     }
 
@@ -139,4 +154,13 @@ public class Ticket {
     public void setCategory(Category category) {
         this.category = category;
     }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+
 }

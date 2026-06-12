@@ -63,7 +63,7 @@
                             <td>#${s.id}</td>
                             <td>${s.category ? s.category.name : "N/A"}</td>
                             <td>${s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A"}</td>
-                            <td><span class="badge-estado ${s.status.toLowerCase()}">${s.status}</span></td>
+                            <td><span class="badge-estado ${s.status.toLowerCase()}">${traducirEstado(s.status)}</span></td>
                             <td><a href="detalle.html?id=${s.id}" class="btn-detalle">Ver</a></td>
                         `;
                                         cuerpo.appendChild(fila);
@@ -73,6 +73,21 @@
                                     document.getElementById("mensaje-vacio").textContent = "Error al cargar solicitudes.";
                                     document.getElementById("mensaje-vacio").classList.remove("oculto");
                                 });
+                    }
+
+                    function traducirEstado(status) {
+                        const estados = {
+                            "ABIERTO": "Abierto",
+                            "ASIGNADO": "Asignado",
+                            "EN_PROCESO": "En Proceso",
+                            "RESUELTO": "Resuelto",
+                            "CERRADO": "Cerrado",
+                            "OPEN": "Abierto",
+                            "IN_PROGRESS": "En Proceso",
+                            "RESOLVED": "Resuelto",
+                            "CLOSED": "Cerrado"
+                        };
+                        return estados[status] || status;
                     }
         </script>
     </body>

@@ -2,12 +2,16 @@ package com.connextion.helpdesk.service;
 
 import com.connextion.helpdesk.model.Ticket;
 import com.connextion.helpdesk.model.User;
+import com.connextion.helpdesk.model.enums.TicketStatus;
+import com.connextion.helpdesk.model.enums.UserRole;
 import com.connextion.helpdesk.repository.TicketRepository;
 import com.connextion.helpdesk.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Transactional
 public class TicketService {
 
     private final TicketRepository ticketRepository;
@@ -19,7 +23,8 @@ public class TicketService {
     }
 
     public Ticket createTicket(Ticket ticket) {
-        ticket.setStatus("OPEN");
+        // CORREGIDO: Uso del Enum estructural TicketStatus
+        ticket.setStatus(TicketStatus.ABIERTO);
         return ticketRepository.save(ticket);
     }
 
@@ -34,21 +39,24 @@ public class TicketService {
         User technician = userRepository.findById(technicianId)
                 .orElseThrow(() -> new RuntimeException("Technician not found"));
 
-        if (!"TECHNICIAN".equals(technician.getRole()) && !"ADMIN".equals(technician.getRole())) {
-            throw new RuntimeException("Assigned user must be a TECHNICIAN or an ADMIN");
+
+        String role = technician.getRole();
+        if (!UserRole.TECHNICIAN.name().equals(role) && !UserRole.SUPERVISOR.name().equals(role)) {
+            throw new RuntimeException("Assigned user must be a TECHNICIAN or a SUPERVISOR");
         }
 
         ticket.setTechnician(technician);
-        ticket.setStatus("IN_PROGRESS");
-
+        ticket.setStatus(TicketStatus.EN_PROCESO);
         return ticketRepository.save(ticket);
     }
 
-    public Ticket updateTicketStatus(Long ticketId, String newStatus) {
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
-        ticket.setStatus(newStatus.toUpperCase());
-        return ticketRepository.save(ticket);
-    }
+   public Ticket updateTicketStatus(Long ticketId, TicketStatus newStatus) {
+    Ticket ticket = ticketRepository.findById(ticketId)
+            .orElseThrow(() -> new RuntimeException("Ticket not found"));
+    ticket.setStatus(newStatus);
+    ticketRepository.save(ticket);
+    ticketRepository.flush(); 
+    return ticket;
+}
 }

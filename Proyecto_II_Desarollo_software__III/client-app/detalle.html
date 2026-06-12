@@ -25,7 +25,6 @@
 
         <div id="mensaje-error" class="mensaje-error oculto"></div>
 
-        <!-- Tarjeta principal -->
         <div class="detalle-card">
             <div class="detalle-header">
                 <div>
@@ -59,12 +58,27 @@
                 <p id="ticket-descripcion"></p>
             </div>
         </div>
+
+        <div class="detalle-card" style="margin-top: 20px;">
+            <h3 style="margin-bottom: 5px;">Historial de Notas Técnicas</h3>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0 20px 0;">
+            
+            <div id="lista-comentarios"></div>
+
+            <div id="formulario-nota-contenedor" class="agregar-nota-container" style="margin-top: 25px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 8px; color: #333;">Agregar Nota Técnica</label>
+                <textarea id="textarea-nota" placeholder="Escriba los detalles del avance o resolución técnica..." style="width: 100%; min-height: 90px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; font-family: inherit;"></textarea>
+                <button onclick="agregarNuevaNota()" class="btn-primary" style="margin-top: 10px; width: 100%; padding: 10px; font-weight: bold; cursor: pointer;">Guardar Nota</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
     <script>
         const usuario = Ui.verificarSesion();
+        let ticketIdActual = null; // Variable global para rastrear el ID del ticket abierto
+
         if (usuario) {
             Ui.mostrarNombreUsuario(usuario);
             cargarTicket();
@@ -78,6 +92,7 @@
                 Ui.mostrarError("mensaje-error", "No se especificó una solicitud.");
                 return;
             }
+            ticketIdActual = id; // Asignamos el ID a la variable global
 
             Api.obtenerTickets(usuario.id)
                 .then(tickets => {
@@ -94,6 +109,7 @@
         }
 
         function renderizarDetalle(t) {
+            // Rellenar datos generales de la solicitud
             document.getElementById("ticket-id").textContent = "#" + t.id;
             document.getElementById("ticket-titulo").textContent = t.title;
             document.getElementById("ticket-categoria").textContent = t.category ? t.category.name : "N/A";
@@ -101,6 +117,7 @@
             document.getElementById("ticket-descripcion").textContent = t.description;
             document.getElementById("ticket-tecnico").textContent = t.technician ? t.technician.name : "Sin asignar";
 
+            // Control de estilos visuales para Estado y Prioridad
             const estadoEl = document.getElementById("ticket-estado");
             estadoEl.textContent = traducirEstado(t.status);
             estadoEl.className = "badge-estado " + t.status.toLowerCase();
@@ -108,12 +125,76 @@
             const prioridadEl = document.getElementById("ticket-prioridad");
             prioridadEl.textContent = t.priority || "N/A";
             prioridadEl.className = "badge-prioridad " + (t.priority ? t.priority.toLowerCase() : "");
+
+            // --- SE MODIFICÓ AQUÍ: CONTROL DE VISIBILIDAD SEGÚN EL ROL DE KENDALL ---
+            const contenedorFormulario = document.getElementById("formulario-nota-contenedor");
+            if (contenedorFormulario) {
+                if (usuario.role === "CLIENT" || usuario.role === "CLIENTE") {
+                    contenedorFormulario.style.display = "none"; // Oculta por completo el formulario para Kendall
+                } else {
+                    contenedorFormulario.style.display = "block"; // Lo muestra para Técnicos
+                }
+            }
+
+            // --- SECCIÓN: RENDERIZADO DINÁMICO DE COMENTARIOS ---
+            const contenedorComentarios = document.getElementById("lista-comentarios");
+            contenedorComentarios.innerHTML = ""; // Limpiar notas previas si las hubiera
+
+            // Mapea la lista ya sea que venga del backend estructurada como 'comments' o 'notes'
+            const comentarios = t.comments || t.notes || []; 
+
+            if (comentarios.length === 0) {
+                contenedorComentarios.innerHTML = `<p style="color: #777; font-style: italic; margin: 10px 0;">No hay notas técnicas registradas para esta solicitud.</p>`;
+            } else {
+                comentarios.forEach(c => {
+                    // Obtener el nombre del autor (Técnico o Cliente)
+                    const autor = c.user ? (c.user.name + " " + (c.user.firstName || "")) : "Usuario";
+                    const fecha = c.createdAt ? new Date(c.createdAt).toLocaleString() : "Fecha N/A";
+                    
+                    const divNota = document.createElement("div");
+                    divNota.style = "background: #f9f9f9; padding: 12px; border-left: 4px solid #0056b3; margin-bottom: 12px; border-radius: 0 4px 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);";
+                    divNota.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85em; color: #555; margin-bottom: 6px;">
+                            <strong>${autor}</strong>
+                            <span>${fecha}</span>
+                        </div>
+                        <p style="margin: 0; color: #222; white-space: pre-wrap; font-size: 0.95em; line-height: 1.4;">${c.text}</p>
+                    `;
+                    contenedorComentarios.appendChild(divNota);
+                });
+            }
+        }
+
+        function agregarNuevaNota() {
+            const txtNota = document.getElementById("textarea-nota");
+            const texto = txtNota.value.trim();
+
+            if (!texto) {
+                alert("Por favor, escriba el detalle del avance antes de guardar.");
+                return;
+            }
+
+            // Consumir el endpoint de guardado en js/api.js
+            Api.crearComentario(ticketIdActual, usuario.id, texto)
+                .then(() => {
+                    txtNota.value = ""; // Limpiar el campo de texto tras un guardado exitoso
+                    cargarTicket();    // Volver a consultar el servidor para refrescar la lista en la pantalla
+                })
+                .catch(err => {
+                    alert("Error al intentar registrar la nota técnica.");
+                    console.error("Detalle del fallo:", err);
+                });
         }
 
         function traducirEstado(status) {
             const estados = {
+                "ABIERTO": "Abierto",
+                "ASIGNADO": "Asignado",
+                "EN_PROCESO": "En Proceso",
+                "RESUELTO": "Resuelto",
+                "CERRADO": "Cerrado",
                 "OPEN": "Abierto",
-                "IN_PROGRESS": "En Progreso",
+                "IN_PROGRESS": "En Proceso",
                 "RESOLVED": "Resuelto",
                 "CLOSED": "Cerrado"
             };
