@@ -65,7 +65,7 @@ public class UserController {
 
         Optional<User> userOpt = userRepository.findByEmail(email);
 
-        if (userOpt.isEmpty() || !userOpt.get().getPassword().equals(password)) {
+        if (userOpt.isEmpty() || !userOpt.get().getPassword().trim().equals(password.trim())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Credenciales incorrectas. Verifique correo o contraseña."));
         }
@@ -86,7 +86,7 @@ public class UserController {
                 "secondSurname", user.getSecondSurname() != null ? user.getSecondSurname() : "",
                 "email", user.getEmail(),
                 "role", user.getRole(),
-                "isSupervisor", user.isSupervisor(),
+                "isSupervisor", user.getIsSupervisor(), // CORREGIDO: Uso de getIsSupervisor()
                 "subscribedServices", user.getSubscribedServices()
         ));
     }
@@ -131,7 +131,7 @@ public class UserController {
                 "message", "Usuario de soporte registrado exitosamente.",
                 "userId", saved.getId(),
                 "role", saved.getRole(),
-                "isSupervisor", saved.isSupervisor()
+                "isSupervisor", saved.getIsSupervisor() // CORREGIDO: Uso de getIsSupervisor()
         ));
     }
 

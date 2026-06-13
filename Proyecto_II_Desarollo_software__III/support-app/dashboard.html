@@ -22,10 +22,10 @@
             <div class="filtros">
                 <select id="filtro-estado" onchange="filtrarSolicitudes()">
                     <option value="">Todos los estados</option>
-                    <option value="OPEN">Abierto</option>
-                    <option value="IN_PROGRESS">En Progreso</option>
-                    <option value="RESOLVED">Resuelto</option>
-                    <option value="CLOSED">Cerrado</option>
+                    <option value="ABIERTO">Abierto</option>
+                    <option value="EN_PROCESO">En Proceso</option>
+                    <option value="RESUELTO">Resuelto</option>
+                    <option value="CERRADO">Cerrado</option>
                 </select>
             </div>
         </div>
@@ -110,8 +110,13 @@
 
         function traducirEstado(status) {
             const estados = {
+                "ABIERTO": "Abierto",
+                "ASIGNADO": "Asignado",
+                "EN_PROCESO": "En Proceso",
+                "RESUELTO": "Resuelto",
+                "CERRADO": "Cerrado",
                 "OPEN": "Abierto",
-                "IN_PROGRESS": "En Progreso",
+                "IN_PROGRESS": "En Proceso",
                 "RESOLVED": "Resuelto",
                 "CLOSED": "Cerrado"
             };

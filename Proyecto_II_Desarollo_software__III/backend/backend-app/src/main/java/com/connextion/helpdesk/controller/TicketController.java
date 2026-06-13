@@ -1,6 +1,7 @@
 package com.connextion.helpdesk.controller;
 
 import com.connextion.helpdesk.model.Ticket;
+import com.connextion.helpdesk.model.enums.TicketStatus; // Importación del Enum necesaria
 import com.connextion.helpdesk.service.TicketService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,6 @@ public class TicketController {
 
     // POST http://localhost:8080/api/tickets
     @PostMapping
-    @CrossOrigin(origins = "*")
     public ResponseEntity<?> createTicket(@RequestBody Ticket ticket) {
         try {
             Ticket created = ticketService.createTicket(ticket);
@@ -47,12 +47,15 @@ public class TicketController {
         }
     }
 
-    // PATCH http://localhost:8080/api/tickets/{ticketId}/status?status=RESOLVED
+    // PATCH http://localhost:8080/api/tickets/{ticketId}/status?status=RESUELTO
     @PatchMapping("/{ticketId}/status")
     public ResponseEntity<?> updateStatus(@PathVariable Long ticketId, @RequestParam String status) {
         try {
-            Ticket updated = ticketService.updateTicketStatus(ticketId, status);
+            TicketStatus nuevoEstado = TicketStatus.fromString(status);
+            Ticket updated = ticketService.updateTicketStatus(ticketId, nuevoEstado);
             return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Estado inválido: " + status);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

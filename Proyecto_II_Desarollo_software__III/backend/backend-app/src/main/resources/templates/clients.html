@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>ConneXtion HelpDesk - Clients</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #0056b3; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        .btn { padding: 8px 12px; text-decoration: none; border-radius: 4px; display: inline-block; }
+        .btn-add { background-color: #28a745; color: white; margin-bottom: 15px; }
+        .btn-edit { background-color: #ffc107; color: black; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <h2>Customer Management</h2>
+    
+    <a th:href="@{/clients/new}" class="btn btn-add">+ Register New Client</a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>First Surname</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="client : ${clients}">
+                <td th:text="${client.id}">1</td>
+                <td th:text="${client.name}">John</td>
+                <td th:text="${client.firstName}">Doe</td>
+                <td th:text="${client.email}">john@example.com</td>
+                <td th:text="${client.phone}">8888-8888</td>
+                <td>
+                    <a th:href="@{/clients/edit/{id}(id=${client.id})}" class="btn btn-edit">Modify</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
