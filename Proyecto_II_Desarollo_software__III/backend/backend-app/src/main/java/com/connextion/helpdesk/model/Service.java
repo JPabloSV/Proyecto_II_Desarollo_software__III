@@ -19,11 +19,11 @@ public class Service {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
  
-    // Nombre del servicio (ej: "Internet", "Cable")
+
     @Column(nullable = false, unique = true, length = 100)
     private String name;
  
-    //lista de usuarios del servicio
+
       @ManyToMany(mappedBy = "subscribedServices")
     @JsonIgnoreProperties("subscribedServices") 
     private List<User> subscribers;
