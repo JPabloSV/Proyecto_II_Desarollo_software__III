@@ -30,12 +30,12 @@ public class Ticket {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    // CAMBIO 1: Uso de Enum para controlar de forma estricta los estados del flujo en SQL Server
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private TicketStatus status = TicketStatus.ABIERTO; // Estado por defecto al crearse
+    private TicketStatus status = TicketStatus.ABIERTO; 
 
-    // CAMBIO 2: Uso de Enum para clasificar la prioridad de atención
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TicketPriority priority;
@@ -63,16 +63,16 @@ public class Ticket {
     @JsonIgnoreProperties("tickets")
     private Category category;
 
-    // CAMBIO 3: Relación bidireccional para extraer la bitácora de notas directamente desde el ticket
+
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("ticket") // Evita recursividad infinita al serializar a JSON
+    @JsonIgnoreProperties("ticket") 
     private List<Comment> comments = new ArrayList<>();
 
-    // Constructores
+
     public Ticket() {
     }
 
-    // Constructor actualizado con los nuevos tipos Enum
+
     public Ticket(String title, String description, TicketStatus status, TicketPriority priority, User client, Category category) {
         this.title = title;
         this.description = description;
@@ -82,7 +82,7 @@ public class Ticket {
         this.category = category;
     }
 
-    // Getters y Setters actualizados
+    // Getters y Setters 
     public Long getId() {
         return id;
     }
