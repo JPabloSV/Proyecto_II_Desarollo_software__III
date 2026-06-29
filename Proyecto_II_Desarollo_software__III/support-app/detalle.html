@@ -22,6 +22,9 @@
                 <button onclick="window.location.href = 'dashboard.html'" class="btn-secondary">
                     ← Volver
                 </button>
+                <button onclick="window.location.href='chat.html?id=' + new URLSearchParams(location.search).get('id')" class="btn-primary">
+                    Abrir Chat
+                </button>
             </div>
 
             <div id="mensaje-error" class="mensaje-error oculto"></div>
@@ -244,10 +247,13 @@
 
                                 Api.asignarTecnico(ticketActual.id, tecnicoId)
                                         .then(data => {
-                                            if (data && data.id) {
-                                                ticketActual = data;
-                                                renderizarDetalle(data);
-                                                mostrarExito("✓ Técnico asignado correctamente.");
+                                            // El backend responde { ticket: {...}, threadResult: "..." }
+                                            const ticketAsignado = data && data.ticket ? data.ticket : data;
+                                            if (ticketAsignado && ticketAsignado.id) {
+                                                ticketActual = ticketAsignado;
+                                                renderizarDetalle(ticketAsignado);
+                                                const info = data && data.threadResult ? " (" + data.threadResult + ")" : "";
+                                                mostrarExito("✓ Técnico asignado correctamente." + info);
                                             } else {
                                                 Ui.mostrarError("mensaje-error", "No se pudo asignar el técnico.");
                                             }

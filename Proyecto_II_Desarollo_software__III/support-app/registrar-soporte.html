@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneXtion - Registrar Usuario de Soporte</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">ConneXtion Soporte</div>
+        <div class="navbar-user">
+            <span>Bienvenido, <strong id="nombre-usuario"></strong></span>
+            <span id="rol-usuario" class="badge-rol"></span>
+            <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h2>Registrar Usuario de Soporte</h2>
+            <button onclick="window.location.href='dashboard.html'" class="btn-secondary">
+                ← Volver
+            </button>
+        </div>
+
+        <div class="form-card" style="max-width: 600px; margin: 0 auto;">
+            <div id="mensaje-error" class="mensaje-error oculto"></div>
+            <div id="mensaje-exito" class="mensaje-exito oculto"></div>
+
+            <div class="campo">
+                <label for="nombre">Nombre <span class="requerido">*</span></label>
+                <input type="text" id="nombre" placeholder="Juan" required>
+            </div>
+            <div class="campo">
+                <label for="primerApellido">Primer apellido <span class="requerido">*</span></label>
+                <input type="text" id="primerApellido" placeholder="Pérez" required>
+            </div>
+            <div class="campo">
+                <label for="segundoApellido">Segundo apellido <span class="requerido">*</span></label>
+                <input type="text" id="segundoApellido" placeholder="González" required>
+            </div>
+            <div class="campo">
+                <label for="email">Correo electrónico <span class="requerido">*</span></label>
+                <input type="email" id="email" placeholder="soporte@connextion.com" required>
+            </div>
+            <div class="campo">
+                <label for="password">Contraseña <span class="requerido">*</span></label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <div class="campo">
+                <label>Rol</label>
+                <label class="servicio-item" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="esSupervisor">
+                    Este usuario es <strong>Supervisor</strong>
+                </label>
+            </div>
+
+            <div class="campo">
+                <label>Servicios que atiende <span class="requerido">*</span></label>
+                <div id="contenedor-servicios" class="servicios-grid">
+                    <p style="color:#888; font-size:0.9em;">Cargando servicios...</p>
+                </div>
+            </div>
+
+            <div class="form-acciones" style="margin-top: 20px;">
+                <button type="button" onclick="window.location.href='dashboard.html'" class="btn-secondary">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-registrar" onclick="registrarUsuario()" class="btn-primary">
+                    Registrar usuario
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        const usuario = Ui.verificarSesion();
+        if (usuario) {
+            Ui.mostrarNombreUsuario(usuario);
+            document.getElementById("rol-usuario").textContent = usuario.role;
+
+            // Only supervisors can access this page
+            if (!usuario.isSupervisor && usuario.role !== "SUPERVISOR") {
+                document.getElementById("mensaje-error").textContent =
+                    "Solo los supervisores pueden registrar usuarios de soporte.";
+                document.getElementById("mensaje-error").classList.remove("oculto");
+                document.getElementById("btn-registrar").disabled = true;
+            }
+        }
+
+        // Load services from backend
+        Api.obtenerServicios().then(servicios => {
+            const contenedor = document.getElementById("contenedor-servicios");
+            contenedor.innerHTML = "";
+            servicios.forEach(s => {
+                const label = document.createElement("label");
+                label.className = "servicio-item";
+                label.innerHTML = `<input type="checkbox" value="${s.id}"> ${s.name}`;
+                contenedor.appendChild(label);
+            });
+        }).catch(() => {
+            document.getElementById("contenedor-servicios").innerHTML =
+                '<p style="color:red;">Error al cargar servicios.</p>';
+        });
+
+        function registrarUsuario() {
+            const nombre = document.getElementById("nombre").value.trim();
+            const primerApellido = document.getElementById("primerApellido").value.trim();
+            const segundoApellido = document.getElementById("segundoApellido").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const esSupervisor = document.getElementById("esSupervisor").checked;
+
+            const serviceIds = [];
+            document.querySelectorAll("#contenedor-servicios input:checked").forEach(cb => {
+                serviceIds.push(parseInt(cb.value));
+            });
+
+            const error = document.getElementById("mensaje-error");
+            error.classList.add("oculto");
+
+            if (!nombre || !primerApellido || !segundoApellido || !email || !password) {
+                error.textContent = "Por favor completá todos los campos obligatorios.";
+                error.classList.remove("oculto");
+                return;
+            }
+            if (serviceIds.length === 0) {
+                error.textContent = "Debe asignar al menos un servicio al usuario de soporte.";
+                error.classList.remove("oculto");
+                return;
+            }
+
+            const btn = document.getElementById("btn-registrar");
+            btn.disabled = true;
+            btn.textContent = "Registrando...";
+
+            Api.registrarUsuarioSoporte({
+                name: nombre,
+                firstName: primerApellido,
+                secondSurname: segundoApellido,
+                email,
+                password,
+                isSupervisor: esSupervisor,
+                serviceIds
+            }).then(data => {
+                if (data.userId) {
+                    const exito = document.getElementById("mensaje-exito");
+                    exito.textContent = `✓ Usuario ${esSupervisor ? "supervisor" : "soportista"} registrado exitosamente.`;
+                    exito.classList.remove("oculto");
+                    // Reset form
+                    ["nombre","primerApellido","segundoApellido","email","password"].forEach(id => {
+                        document.getElementById(id).value = "";
+                    });
+                    document.querySelectorAll("#contenedor-servicios input").forEach(cb => cb.checked = false);
+                    document.getElementById("esSupervisor").checked = false;
+                } else {
+                    error.textContent = data.message || "Error al registrar el usuario.";
+                    error.classList.remove("oculto");
+                }
+                btn.disabled = false;
+                btn.textContent = "Registrar usuario";
+            }).catch(() => {
+                error.textContent = "No se pudo conectar con el servidor.";
+                error.classList.remove("oculto");
+                btn.disabled = false;
+                btn.textContent = "Registrar usuario";
+            });
+        }
+    </script>
+</body>
+</html>
