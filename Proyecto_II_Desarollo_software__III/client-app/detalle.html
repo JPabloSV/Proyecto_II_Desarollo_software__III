@@ -21,6 +21,9 @@
             <button onclick="window.location.href='dashboard.html'" class="btn-secondary">
                 ← Volver
             </button>
+            <button onclick="window.location.href='chat.html?id=' + new URLSearchParams(location.search).get('id')" class="btn-primary">
+                Abrir Chat
+            </button>
         </div>
 
         <div id="mensaje-error" class="mensaje-error oculto"></div>
@@ -60,15 +63,15 @@
         </div>
 
         <div class="detalle-card" style="margin-top: 20px;">
-            <h3 style="margin-bottom: 5px;">Historial de Notas Técnicas</h3>
+            <h3 style="margin-bottom: 5px;">Comentarios</h3>
             <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0 20px 0;">
             
             <div id="lista-comentarios"></div>
 
             <div id="formulario-nota-contenedor" class="agregar-nota-container" style="margin-top: 25px;">
-                <label style="font-weight: bold; display: block; margin-bottom: 8px; color: #333;">Agregar Nota Técnica</label>
-                <textarea id="textarea-nota" placeholder="Escriba los detalles del avance o resolución técnica..." style="width: 100%; min-height: 90px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; font-family: inherit;"></textarea>
-                <button onclick="agregarNuevaNota()" class="btn-primary" style="margin-top: 10px; width: 100%; padding: 10px; font-weight: bold; cursor: pointer;">Guardar Nota</button>
+                <label style="font-weight: bold; display: block; margin-bottom: 8px; color: #333;">Agregar Comentario</label>
+                <textarea id="textarea-nota" placeholder="Escriba su comentario o consulta sobre esta solicitud..." style="width: 100%; min-height: 90px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; font-family: inherit;"></textarea>
+                <button onclick="agregarNuevaNota()" class="btn-primary" style="margin-top: 10px; width: 100%; padding: 10px; font-weight: bold; cursor: pointer;">Enviar Comentario</button>
             </div>
         </div>
     </div>
@@ -129,11 +132,8 @@
             // --- SE MODIFICÓ AQUÍ: CONTROL DE VISIBILIDAD SEGÚN EL ROL DE KENDALL ---
             const contenedorFormulario = document.getElementById("formulario-nota-contenedor");
             if (contenedorFormulario) {
-                if (usuario.role === "CLIENT" || usuario.role === "CLIENTE") {
-                    contenedorFormulario.style.display = "none"; // Oculta por completo el formulario para Kendall
-                } else {
-                    contenedorFormulario.style.display = "block"; // Lo muestra para Técnicos
-                }
+                // CU6: el cliente debe poder agregar comentarios a su propia solicitud
+                contenedorFormulario.style.display = "block";
             }
 
             // --- SECCIÓN: RENDERIZADO DINÁMICO DE COMENTARIOS ---
@@ -144,7 +144,7 @@
             const comentarios = t.comments || t.notes || []; 
 
             if (comentarios.length === 0) {
-                contenedorComentarios.innerHTML = `<p style="color: #777; font-style: italic; margin: 10px 0;">No hay notas técnicas registradas para esta solicitud.</p>`;
+                contenedorComentarios.innerHTML = `<p style="color: #777; font-style: italic; margin: 10px 0;">No hay comentarios registrados para esta solicitud.</p>`;
             } else {
                 comentarios.forEach(c => {
                     // Obtener el nombre del autor (Técnico o Cliente)

@@ -22,6 +22,11 @@ const Api = {
             .then(res => res.json());
     },
 
+    obtenerCategorias: function() {
+        return fetch(`${API_URL}/categories`)
+            .then(res => res.json());
+    },
+
     obtenerTickets: function(clienteId) {
         return fetch(`${API_URL}/tickets`)
             .then(res => res.json())
@@ -47,17 +52,17 @@ const Api = {
     // NUEVO MÉTODO: CREAR COMENTARIO (NOTA TÉCNICA)
     // ==========================================
     crearComentario: function(ticketId, userId, texto) {
-        return fetch(`${API_URL}/comments`, {
+        return fetch(`${API_URL}/comments/add`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                text: texto,
-                ticket: { id: parseInt(ticketId) }, // Asocia la nota al ID del ticket actual
-                user: { id: parseInt(userId) }     // Registra quién escribió la nota (Técnico)
+                ticketId: parseInt(ticketId),
+                userId: parseInt(userId),
+                text: texto
             })
         }).then(res => {
             if (!res.ok) {
-                throw new Error("Error en la respuesta del servidor al guardar la nota.");
+                throw new Error("Error en la respuesta del servidor al guardar el comentario.");
             }
             return res.json();
         });
