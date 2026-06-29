@@ -10,24 +10,27 @@
     <nav class="navbar">
         <div class="navbar-brand">ConneXtion</div>
         <div class="navbar-user">
-            <span>Bienvenido, <strong id="nombre-usuario"></strong></span>
+            <span>Hola, <strong id="nombre-usuario"></strong></span>
             <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
         </div>
     </nav>
 
     <div class="dashboard-container">
         <div class="dashboard-header">
-            <h2>Detalle de Solicitud</h2>
-            <button onclick="window.location.href='dashboard.html'" class="btn-secondary">
-                ← Volver
-            </button>
-            <button onclick="window.location.href='chat.html?id=' + new URLSearchParams(location.search).get('id')" class="btn-primary">
-                Abrir Chat
+            <div style="display:flex; align-items:center; gap:14px;">
+                <button onclick="window.location.href='dashboard.html'" class="btn-secondary btn-volver">
+                    Volver a mis solicitudes
+                </button>
+                <h2 style="margin:0;">Detalle de Solicitud</h2>
+            </div>
+            <button onclick="irAlChat()" class="btn-primary">
+                💬 Abrir Chat
             </button>
         </div>
 
         <div id="mensaje-error" class="mensaje-error oculto"></div>
 
+        <!-- Tarjeta principal de info -->
         <div class="detalle-card">
             <div class="detalle-header">
                 <div>
@@ -40,19 +43,19 @@
             <div class="detalle-grid">
                 <div class="detalle-campo">
                     <label>Categoría</label>
-                    <span id="ticket-categoria"></span>
+                    <span id="ticket-categoria">—</span>
                 </div>
                 <div class="detalle-campo">
                     <label>Prioridad</label>
-                    <span id="ticket-prioridad" class="badge-prioridad"></span>
+                    <span id="ticket-prioridad" class="badge-prioridad">—</span>
                 </div>
                 <div class="detalle-campo">
                     <label>Fecha de creación</label>
-                    <span id="ticket-fecha"></span>
+                    <span id="ticket-fecha">—</span>
                 </div>
                 <div class="detalle-campo">
                     <label>Técnico asignado</label>
-                    <span id="ticket-tecnico"></span>
+                    <span id="ticket-tecnico">—</span>
                 </div>
             </div>
 
@@ -62,16 +65,20 @@
             </div>
         </div>
 
-        <div class="detalle-card" style="margin-top: 20px;">
-            <h3 style="margin-bottom: 5px;">Comentarios</h3>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0 20px 0;">
-            
+        <!-- Comentarios -->
+        <div class="detalle-card">
+            <h3 style="font-size:17px; font-weight:700; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--gris-borde);">
+                💬 Comentarios
+            </h3>
+
             <div id="lista-comentarios"></div>
 
-            <div id="formulario-nota-contenedor" class="agregar-nota-container" style="margin-top: 25px;">
-                <label style="font-weight: bold; display: block; margin-bottom: 8px; color: #333;">Agregar Comentario</label>
-                <textarea id="textarea-nota" placeholder="Escriba su comentario o consulta sobre esta solicitud..." style="width: 100%; min-height: 90px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; font-family: inherit;"></textarea>
-                <button onclick="agregarNuevaNota()" class="btn-primary" style="margin-top: 10px; width: 100%; padding: 10px; font-weight: bold; cursor: pointer;">Enviar Comentario</button>
+            <div id="formulario-nota-contenedor" class="agregar-nota-container">
+                <label>Agregar Comentario</label>
+                <textarea id="textarea-nota" placeholder="Escriba su comentario o consulta sobre esta solicitud..."></textarea>
+                <button onclick="agregarNuevaNota()" class="btn-primary">
+                    Enviar Comentario
+                </button>
             </div>
         </div>
     </div>
@@ -80,22 +87,26 @@
     <script src="js/ui.js"></script>
     <script>
         const usuario = Ui.verificarSesion();
-        let ticketIdActual = null; // Variable global para rastrear el ID del ticket abierto
+        let ticketIdActual = null;
 
         if (usuario) {
             Ui.mostrarNombreUsuario(usuario);
             cargarTicket();
         }
 
+        function irAlChat() {
+            const id = new URLSearchParams(location.search).get('id');
+            if (id) window.location.href = 'chat.html?id=' + id;
+        }
+
         function cargarTicket() {
             const params = new URLSearchParams(window.location.search);
             const id = params.get("id");
-
             if (!id) {
                 Ui.mostrarError("mensaje-error", "No se especificó una solicitud.");
                 return;
             }
-            ticketIdActual = id; // Asignamos el ID a la variable global
+            ticketIdActual = id;
 
             Api.obtenerTickets(usuario.id)
                 .then(tickets => {
@@ -112,55 +123,50 @@
         }
 
         function renderizarDetalle(t) {
-            // Rellenar datos generales de la solicitud
             document.getElementById("ticket-id").textContent = "#" + t.id;
-            document.getElementById("ticket-titulo").textContent = t.title;
+            document.getElementById("ticket-titulo").textContent = t.title || t.category?.name || "Solicitud";
             document.getElementById("ticket-categoria").textContent = t.category ? t.category.name : "N/A";
-            document.getElementById("ticket-fecha").textContent = t.createdAt ? new Date(t.createdAt).toLocaleString() : "N/A";
+            document.getElementById("ticket-fecha").textContent = t.createdAt
+                ? new Date(t.createdAt).toLocaleString('es-CR') : "N/A";
             document.getElementById("ticket-descripcion").textContent = t.description;
-            document.getElementById("ticket-tecnico").textContent = t.technician ? t.technician.name : "Sin asignar";
+            document.getElementById("ticket-tecnico").textContent = t.technician
+                ? t.technician.name : "Sin asignar aún";
 
-            // Control de estilos visuales para Estado y Prioridad
             const estadoEl = document.getElementById("ticket-estado");
             estadoEl.textContent = traducirEstado(t.status);
             estadoEl.className = "badge-estado " + t.status.toLowerCase();
 
             const prioridadEl = document.getElementById("ticket-prioridad");
-            prioridadEl.textContent = t.priority || "N/A";
-            prioridadEl.className = "badge-prioridad " + (t.priority ? t.priority.toLowerCase() : "");
-
-            // --- SE MODIFICÓ AQUÍ: CONTROL DE VISIBILIDAD SEGÚN EL ROL DE KENDALL ---
-            const contenedorFormulario = document.getElementById("formulario-nota-contenedor");
-            if (contenedorFormulario) {
-                // CU6: el cliente debe poder agregar comentarios a su propia solicitud
-                contenedorFormulario.style.display = "block";
+            if (t.priority) {
+                prioridadEl.textContent = t.priority;
+                prioridadEl.className = "badge-prioridad " + t.priority.toLowerCase();
+            } else {
+                prioridadEl.textContent = "No definida";
+                prioridadEl.className = "";
+                prioridadEl.style.color = "var(--texto-suave)";
             }
 
-            // --- SECCIÓN: RENDERIZADO DINÁMICO DE COMENTARIOS ---
+            // Renderizar comentarios
             const contenedorComentarios = document.getElementById("lista-comentarios");
-            contenedorComentarios.innerHTML = ""; // Limpiar notas previas si las hubiera
-
-            // Mapea la lista ya sea que venga del backend estructurada como 'comments' o 'notes'
-            const comentarios = t.comments || t.notes || []; 
+            contenedorComentarios.innerHTML = "";
+            const comentarios = t.comments || t.notes || [];
 
             if (comentarios.length === 0) {
-                contenedorComentarios.innerHTML = `<p style="color: #777; font-style: italic; margin: 10px 0;">No hay comentarios registrados para esta solicitud.</p>`;
+                contenedorComentarios.innerHTML = `<p class="texto-vacio">No hay comentarios registrados para esta solicitud.</p>`;
             } else {
                 comentarios.forEach(c => {
-                    // Obtener el nombre del autor (Técnico o Cliente)
-                    const autor = c.user ? (c.user.name + " " + (c.user.firstName || "")) : "Usuario";
-                    const fecha = c.createdAt ? new Date(c.createdAt).toLocaleString() : "Fecha N/A";
-                    
-                    const divNota = document.createElement("div");
-                    divNota.style = "background: #f9f9f9; padding: 12px; border-left: 4px solid #0056b3; margin-bottom: 12px; border-radius: 0 4px 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);";
-                    divNota.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; font-size: 0.85em; color: #555; margin-bottom: 6px;">
+                    const autor = c.user ? (c.user.name + (c.user.firstName ? " " + c.user.firstName : "")) : "Usuario";
+                    const fecha = c.createdAt ? new Date(c.createdAt).toLocaleString('es-CR') : "Fecha N/A";
+                    const div = document.createElement("div");
+                    div.className = "comentario-item";
+                    div.innerHTML = `
+                        <div class="comentario-meta">
                             <strong>${autor}</strong>
                             <span>${fecha}</span>
                         </div>
-                        <p style="margin: 0; color: #222; white-space: pre-wrap; font-size: 0.95em; line-height: 1.4;">${c.text}</p>
+                        <div class="comentario-texto">${c.text}</div>
                     `;
-                    contenedorComentarios.appendChild(divNota);
+                    contenedorComentarios.appendChild(div);
                 });
             }
         }
@@ -168,35 +174,27 @@
         function agregarNuevaNota() {
             const txtNota = document.getElementById("textarea-nota");
             const texto = txtNota.value.trim();
-
             if (!texto) {
-                alert("Por favor, escriba el detalle del avance antes de guardar.");
+                alert("Por favor, escriba un comentario antes de enviar.");
                 return;
             }
-
-            // Consumir el endpoint de guardado en js/api.js
             Api.crearComentario(ticketIdActual, usuario.id, texto)
                 .then(() => {
-                    txtNota.value = ""; // Limpiar el campo de texto tras un guardado exitoso
-                    cargarTicket();    // Volver a consultar el servidor para refrescar la lista en la pantalla
+                    txtNota.value = "";
+                    cargarTicket();
                 })
                 .catch(err => {
-                    alert("Error al intentar registrar la nota técnica.");
-                    console.error("Detalle del fallo:", err);
+                    alert("Error al registrar el comentario.");
+                    console.error(err);
                 });
         }
 
         function traducirEstado(status) {
             const estados = {
-                "ABIERTO": "Abierto",
-                "ASIGNADO": "Asignado",
-                "EN_PROCESO": "En Proceso",
-                "RESUELTO": "Resuelto",
-                "CERRADO": "Cerrado",
-                "OPEN": "Abierto",
-                "IN_PROGRESS": "En Proceso",
-                "RESOLVED": "Resuelto",
-                "CLOSED": "Cerrado"
+                "ABIERTO": "Abierto", "ASIGNADO": "Asignado",
+                "EN_PROCESO": "En Proceso", "RESUELTO": "Resuelto", "CERRADO": "Cerrado",
+                "OPEN": "Abierto", "IN_PROGRESS": "En Proceso",
+                "RESOLVED": "Resuelto", "CLOSED": "Cerrado"
             };
             return estados[status] || status;
         }

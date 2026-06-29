@@ -1,94 +1,480 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ConneXtion - Mis Solicitudes</title>
-        <link rel="stylesheet" href="css/styles.css">
-    </head>
-    <body>
-        <nav class="navbar">
-            <div class="navbar-brand">ConneXtion</div>
-            <div class="navbar-user">
-                <span>Bienvenido, <strong id="nombre-usuario"></strong></span>
-                <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
-            </div>
-        </nav>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneXtion - Mis Solicitudes</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* ── Notificaciones toast ─── */
+        #notif-container {
+            position: fixed;
+            top: 72px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 340px;
+            pointer-events: none;
+        }
+        .notif-toast {
+            background: white;
+            border-radius: 10px;
+            padding: 14px 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.16);
+            border-left: 5px solid #0057b8;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            pointer-events: all;
+            animation: notif-entrar 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+            cursor: pointer;
+        }
+        .notif-toast.saliendo {
+            animation: notif-salir 0.3s ease forwards;
+        }
+        .notif-toast.asignado          { border-left-color: #b45309; }
+        .notif-toast.en_proceso,
+        .notif-toast.in_progress       { border-left-color: #15803d; }
+        .notif-toast.resuelto,
+        .notif-toast.resolved          { border-left-color: #7e22ce; }
+        .notif-toast.cerrado,
+        .notif-toast.closed            { border-left-color: #64748b; }
 
-        <div class="dashboard-container">
-            <div class="dashboard-header">
-                <h2>Mis Solicitudes</h2>
-                <button onclick="window.location.href = 'nueva-solicitud.html'" class="btn-primary">
+        .notif-icono  { font-size: 22px; flex-shrink: 0; line-height: 1.2; }
+        .notif-cuerpo { flex: 1; min-width: 0; }
+        .notif-titulo { font-size: 13px; font-weight: 700; color: #1a1d23; margin-bottom: 3px; }
+        .notif-texto  { font-size: 12px; color: #4a5568; line-height: 1.4; }
+        .notif-cerrar { background: none; border: none; font-size: 18px; color: #94a3b8; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
+        .notif-cerrar:hover { color: #475569; }
+
+        /* Campana en navbar */
+        #notif-campana-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        #btn-campana {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 7px;
+            color: white;
+            font-size: 18px;
+            width: 36px;
+            height: 34px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.18s;
+        }
+        #btn-campana:hover { background: rgba(255,255,255,0.28); }
+        #notif-badge {
+            position: absolute;
+            top: -6px; right: -6px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            min-width: 18px; height: 18px;
+            font-size: 11px; font-weight: 700;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 3px;
+            border: 2px solid #0057b8;
+        }
+
+        /* Panel historial de notificaciones */
+        #notif-panel {
+            position: fixed;
+            top: 62px; right: 16px;
+            width: 320px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            z-index: 9998;
+            display: none;
+            flex-direction: column;
+            max-height: 420px;
+            overflow: hidden;
+            border: 1px solid #e0e4ea;
+        }
+        #notif-panel.visible { display: flex; }
+        .notif-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f2f5;
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1d23;
+        }
+        .notif-panel-header button {
+            background: none; border: none; font-size: 12px;
+            color: #0057b8; cursor: pointer; font-weight: 600;
+        }
+        #notif-lista {
+            overflow-y: auto;
+            flex: 1;
+        }
+        .notif-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f8faff;
+            display: flex;
+            gap: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .notif-item:hover { background: #f5f8ff; }
+        .notif-item.no-leida { background: #eef4ff; }
+        .notif-item .ni-icono { font-size: 18px; flex-shrink: 0; }
+        .notif-item .ni-cuerpo { flex: 1; }
+        .notif-item .ni-titulo { font-weight: 600; color: #1a1d23; margin-bottom: 2px; }
+        .notif-item .ni-texto  { color: #4a5568; font-size: 12px; }
+        .notif-item .ni-hora   { color: #94a3b8; font-size: 11px; margin-top: 3px; }
+        .notif-vacia { text-align: center; padding: 32px 16px; color: #94a3b8; font-size: 13px; }
+
+        @keyframes notif-entrar {
+            from { opacity: 0; transform: translateX(60px) scale(0.92); }
+            to   { opacity: 1; transform: translateX(0)    scale(1); }
+        }
+        @keyframes notif-salir {
+            from { opacity: 1; transform: translateX(0);   max-height: 200px; margin-bottom: 10px; }
+            to   { opacity: 0; transform: translateX(60px); max-height: 0; padding: 0; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Contenedor de toasts -->
+    <div id="notif-container"></div>
+
+    <!-- Panel historial -->
+    <div id="notif-panel">
+        <div class="notif-panel-header">
+            <span>🔔 Notificaciones</span>
+            <button onclick="marcarTodasLeidas()">Marcar todas como leídas</button>
+        </div>
+        <div id="notif-lista">
+            <p class="notif-vacia">Sin notificaciones aún.</p>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <div class="navbar-brand">ConneXtion</div>
+        <div class="navbar-user">
+            <span>Hola, <strong id="nombre-usuario"></strong></span>
+            <!-- Campana -->
+            <div id="notif-campana-wrapper">
+                <button id="btn-campana" onclick="togglePanel(event)" title="Notificaciones">🔔</button>
+                <span id="notif-badge"></span>
+            </div>
+            <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h2>Mis Solicitudes</h2>
+            <div class="header-acciones">
+                <button onclick="window.location.href='nueva-solicitud.html'" class="btn-primary">
                     + Nueva Solicitud
                 </button>
             </div>
-
-            <div id="mensaje-vacio" class="mensaje-vacio oculto">
-                No tenés solicitudes registradas.
-            </div>
-
-            <div class="tabla-container">
-                <table id="tabla-solicitudes">
-                    <thead>
-                        <tr>
-                            <th># Solicitud</th>
-                            <th>Servicio</th>
-                            <th>Fecha</th>
-                            <th>Estado</th>
-                            <th>Detalle</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpo-tabla">
-                    </tbody>
-                </table>
-            </div>
         </div>
 
-        <script src="js/api.js"></script>
-        <script src="js/ui.js"></script>
-        <script>
-                    const usuario = Ui.verificarSesion();
-                    if (usuario) {
-                        Ui.mostrarNombreUsuario(usuario);
-                        Api.obtenerTickets(usuario.id)
-                                .then(solicitudes => {
-                                    const cuerpo = document.getElementById("cuerpo-tabla");
-                                    if (solicitudes.length === 0) {
-                                        document.getElementById("mensaje-vacio").classList.remove("oculto");
-                                        return;
-                                    }
-                                    solicitudes.forEach(s => {
-                                        const fila = document.createElement("tr");
-                                        fila.innerHTML = `
-                            <td>#${s.id}</td>
-                            <td>${s.category ? s.category.name : "N/A"}</td>
-                            <td>${s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A"}</td>
-                            <td><span class="badge-estado ${s.status.toLowerCase()}">${traducirEstado(s.status)}</span></td>
-                            <td><a href="detalle.html?id=${s.id}" class="btn-detalle">Ver</a></td>
-                        `;
-                                        cuerpo.appendChild(fila);
-                                    });
-                                })
-                                .catch(() => {
-                                    document.getElementById("mensaje-vacio").textContent = "Error al cargar solicitudes.";
-                                    document.getElementById("mensaje-vacio").classList.remove("oculto");
-                                });
-                    }
+        <!-- Barra de filtros -->
+        <div class="filtros-barra">
+            <label for="filtro-estado">Filtrar por estado:</label>
+            <select id="filtro-estado" onchange="filtrarSolicitudes()">
+                <option value="">Todos los estados</option>
+                <option value="ABIERTO">Abierto</option>
+                <option value="OPEN">Abierto (EN)</option>
+                <option value="ASIGNADO">Asignado</option>
+                <option value="EN_PROCESO">En Proceso</option>
+                <option value="IN_PROGRESS">En Proceso (EN)</option>
+                <option value="RESUELTO">Resuelto</option>
+                <option value="RESOLVED">Resuelto (EN)</option>
+                <option value="CERRADO">Cerrado</option>
+                <option value="CLOSED">Cerrado (EN)</option>
+            </select>
+            <button class="btn-limpiar" onclick="limpiarFiltro()">✕ Limpiar</button>
+            <span class="contador-resultados" id="contador-resultados"></span>
+        </div>
 
-                    function traducirEstado(status) {
-                        const estados = {
-                            "ABIERTO": "Abierto",
-                            "ASIGNADO": "Asignado",
-                            "EN_PROCESO": "En Proceso",
-                            "RESUELTO": "Resuelto",
-                            "CERRADO": "Cerrado",
-                            "OPEN": "Abierto",
-                            "IN_PROGRESS": "En Proceso",
-                            "RESOLVED": "Resuelto",
-                            "CLOSED": "Cerrado"
-                        };
-                        return estados[status] || status;
+        <div id="mensaje-vacio" class="mensaje-vacio oculto">
+            <div class="mensaje-vacio-icon">📋</div>
+            <p>No tenés solicitudes registradas aún.</p>
+            <button onclick="window.location.href='nueva-solicitud.html'" class="btn-primary" style="margin-top:16px; width:auto; padding: 10px 22px;">
+                Crear primera solicitud
+            </button>
+        </div>
+
+        <div class="tarjetas-grid" id="tarjetas-container"></div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        let todasSolicitudes = [];
+        // Mapa de estados previos: { ticketId: status }
+        let estadosPrevios = {};
+        // Historial de notificaciones
+        let historialNotifs = JSON.parse(sessionStorage.getItem('notifs') || '[]');
+        let noLeidasCount = historialNotifs.filter(n => !n.leida).length;
+        const POLL_INTERVAL = 20000; // 20 segundos
+
+        const ICONOS_ESTADO = {
+            ASIGNADO: '👤', asignado: '👤',
+            EN_PROCESO: '🔧', en_proceso: '🔧', in_progress: '🔧',
+            RESUELTO: '✅', resuelto: '✅', resolved: '✅',
+            CERRADO: '🔒', cerrado: '🔒', closed: '🔒',
+        };
+
+        const usuario = Ui.verificarSesion();
+        if (usuario) {
+            Ui.mostrarNombreUsuario(usuario);
+            // Carga inicial
+            Api.obtenerTickets(usuario.id)
+                .then(solicitudes => {
+                    todasSolicitudes = solicitudes;
+                    // Guardar estados iniciales como línea base (sin notificar)
+                    solicitudes.forEach(s => { estadosPrevios[s.id] = s.status; });
+                    renderizarTarjetas(solicitudes);
+                    actualizarBadge();
+                    renderizarPanel();
+                    // Iniciar polling
+                    setInterval(pollEstados, POLL_INTERVAL);
+                })
+                .catch(() => {
+                    const vacio = document.getElementById("mensaje-vacio");
+                    vacio.querySelector("div").textContent = "⚠️";
+                    vacio.querySelector("p").textContent = "Error al cargar solicitudes. Intente de nuevo.";
+                    vacio.classList.remove("oculto");
+                });
+        }
+
+        // ── Polling ───────────────────────────────────────
+        function pollEstados() {
+            if (!usuario) return;
+            Api.obtenerTickets(usuario.id)
+                .then(solicitudes => {
+                    let cambios = false;
+                    solicitudes.forEach(s => {
+                        const previo = estadosPrevios[s.id];
+                        if (previo !== undefined && previo !== s.status) {
+                            // Hubo un cambio de estado → notificar
+                            emitirNotificacion(s);
+                            cambios = true;
+                        }
+                        estadosPrevios[s.id] = s.status;
+                    });
+                    todasSolicitudes = solicitudes;
+                    if (cambios) {
+                        // Refrescar tarjetas silenciosamente
+                        const filtro = document.getElementById("filtro-estado").value;
+                        const visibles = filtro ? solicitudes.filter(s => s.status === filtro) : solicitudes;
+                        renderizarTarjetas(visibles);
                     }
-        </script>
-    </body>
+                })
+                .catch(() => { /* silencioso en background */ });
+        }
+
+        // ── Emitir notificación ───────────────────────────
+        function emitirNotificacion(ticket) {
+            const estadoClase = ticket.status.toLowerCase();
+            const estadoTexto = traducirEstado(ticket.status);
+            const icono = ICONOS_ESTADO[ticket.status] || ICONOS_ESTADO[estadoClase] || '📋';
+            const categoria = ticket.category ? ticket.category.name : 'Solicitud';
+            const titulo = `Solicitud #${ticket.id} actualizada`;
+            const texto = `Estado cambiado a: ${estadoTexto}`;
+            const hora = new Date().toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+
+            // Guardar en historial
+            const notif = { id: Date.now(), ticketId: ticket.id, titulo, texto, hora, icono, estadoClase, leida: false };
+            historialNotifs.unshift(notif);
+            if (historialNotifs.length > 30) historialNotifs.pop();
+            sessionStorage.setItem('notifs', JSON.stringify(historialNotifs));
+            noLeidasCount++;
+            actualizarBadge();
+            renderizarPanel();
+
+            // Mostrar toast
+            mostrarToast(notif);
+
+            // Notificación nativa del navegador si tiene permiso
+            if (Notification.permission === 'granted') {
+                new Notification(`ConneXtion - ${titulo}`, {
+                    body: texto,
+                    icon: '🔔'
+                });
+            }
+        }
+
+        function mostrarToast(notif) {
+            const container = document.getElementById("notif-container");
+            const toast = document.createElement("div");
+            toast.className = `notif-toast ${notif.estadoClase}`;
+            toast.innerHTML = `
+                <span class="notif-icono">${notif.icono}</span>
+                <div class="notif-cuerpo">
+                    <div class="notif-titulo">${notif.titulo}</div>
+                    <div class="notif-texto">${notif.texto}</div>
+                </div>
+                <button class="notif-cerrar" onclick="cerrarToast(this.parentElement)">×</button>
+            `;
+            toast.onclick = (e) => {
+                if (e.target.classList.contains('notif-cerrar')) return;
+                window.location.href = `detalle.html?id=${notif.ticketId}`;
+            };
+            container.appendChild(toast);
+            // Auto-cerrar en 6 segundos
+            setTimeout(() => cerrarToast(toast), 6000);
+        }
+
+        function cerrarToast(toast) {
+            if (!toast || toast.classList.contains('saliendo')) return;
+            toast.classList.add('saliendo');
+            setTimeout(() => toast.remove(), 300);
+        }
+
+        // ── Panel de historial ────────────────────────────
+        function togglePanel(e) {
+            e.stopPropagation();
+            const panel = document.getElementById("notif-panel");
+            panel.classList.toggle("visible");
+            if (panel.classList.contains("visible")) {
+                marcarTodasLeidas();
+            }
+        }
+
+        document.addEventListener('click', () => {
+            document.getElementById("notif-panel").classList.remove("visible");
+        });
+        document.getElementById("notif-panel").addEventListener('click', e => e.stopPropagation());
+
+        function renderizarPanel() {
+            const lista = document.getElementById("notif-lista");
+            if (historialNotifs.length === 0) {
+                lista.innerHTML = '<p class="notif-vacia">🔕 Sin notificaciones aún.</p>';
+                return;
+            }
+            lista.innerHTML = historialNotifs.map(n => `
+                <div class="notif-item ${n.leida ? '' : 'no-leida'}" onclick="irATicket(${n.ticketId})">
+                    <span class="ni-icono">${n.icono}</span>
+                    <div class="ni-cuerpo">
+                        <div class="ni-titulo">${n.titulo}</div>
+                        <div class="ni-texto">${n.texto}</div>
+                        <div class="ni-hora">${n.hora}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function marcarTodasLeidas() {
+            historialNotifs.forEach(n => n.leida = true);
+            noLeidasCount = 0;
+            sessionStorage.setItem('notifs', JSON.stringify(historialNotifs));
+            actualizarBadge();
+            renderizarPanel();
+        }
+
+        function actualizarBadge() {
+            const badge = document.getElementById("notif-badge");
+            if (noLeidasCount > 0) {
+                badge.textContent = noLeidasCount > 9 ? '9+' : noLeidasCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function irATicket(id) {
+            window.location.href = `detalle.html?id=${id}`;
+        }
+
+        // Solicitar permiso de notificaciones nativas al cargar
+        if ('Notification' in window && Notification.permission === 'default') {
+            setTimeout(() => Notification.requestPermission(), 3000);
+        }
+
+        // ── Renderizado de tarjetas ───────────────────────
+        function filtrarSolicitudes() {
+            const filtro = document.getElementById("filtro-estado").value;
+            const filtradas = filtro
+                ? todasSolicitudes.filter(s => s.status === filtro)
+                : todasSolicitudes;
+            renderizarTarjetas(filtradas);
+        }
+
+        function limpiarFiltro() {
+            document.getElementById("filtro-estado").value = "";
+            renderizarTarjetas(todasSolicitudes);
+        }
+
+        function renderizarTarjetas(solicitudes) {
+            const container = document.getElementById("tarjetas-container");
+            const vacio = document.getElementById("mensaje-vacio");
+            const contador = document.getElementById("contador-resultados");
+            container.innerHTML = "";
+
+            if (solicitudes.length === 0) {
+                vacio.classList.remove("oculto");
+                contador.textContent = "0 resultados";
+                return;
+            }
+
+            vacio.classList.add("oculto");
+            contador.textContent = `${solicitudes.length} solicitud${solicitudes.length !== 1 ? 'es' : ''}`;
+
+            solicitudes.forEach(s => {
+                const estadoClase = s.status.toLowerCase();
+                const estadoTexto = traducirEstado(s.status);
+                const fecha = s.createdAt ? new Date(s.createdAt).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A";
+                const categoria = s.category ? s.category.name : "Sin categoría";
+                const prioridad = s.priority || null;
+                const tecnico = s.technician ? s.technician.name : null;
+
+                const card = document.createElement("div");
+                card.className = "ticket-card";
+                card.innerHTML = `
+                    <div class="ticket-card-header">
+                        <div>
+                            <span class="ticket-card-id">#${s.id}</span>
+                            <div class="ticket-card-titulo">${s.title || categoria}</div>
+                        </div>
+                        <span class="badge-estado ${estadoClase}">${estadoTexto}</span>
+                    </div>
+                    <div class="ticket-card-meta">
+                        <span> ${categoria}</span>
+                        <span> ${fecha}</span>
+                        ${prioridad ? `<span> Prioridad: <span class="badge-prioridad ${prioridad.toLowerCase()}">${prioridad}</span></span>` : ''}
+                        ${tecnico ? `<span> Técnico: ${tecnico}</span>` : ''}
+                    </div>
+                    <div class="ticket-card-footer">
+                        <span style="font-size:12px; color: var(--texto-suave);">
+                            ${s.comments && s.comments.length > 0 ? ` ${s.comments.length} comentario${s.comments.length !== 1 ? 's' : ''}` : '💬 Sin comentarios'}
+                        </span>
+                        <a href="detalle.html?id=${s.id}" class="btn-primary" style="padding: 7px 16px; font-size: 13px;">
+                            Ver detalle →
+                        </a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function traducirEstado(status) {
+            const estados = {
+                "ABIERTO": "Abierto", "ASIGNADO": "Asignado",
+                "EN_PROCESO": "En Proceso", "RESUELTO": "Resuelto", "CERRADO": "Cerrado",
+                "OPEN": "Abierto", "IN_PROGRESS": "En Proceso",
+                "RESOLVED": "Resuelto", "CLOSED": "Cerrado"
+            };
+            return estados[status] || status;
+        }
+    </script>
+</body>
 </html>
