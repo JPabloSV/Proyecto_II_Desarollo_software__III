@@ -1,396 +1,358 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ConneXtion - Detalle de Solicitud</title>
-        <link rel="stylesheet" href="css/styles.css">
-    </head>
-    <body>
-        <nav class="navbar">
-            <div class="navbar-brand">ConneXtion Soporte</div>
-            <div class="navbar-user">
-                <span>Bienvenido, <strong id="nombre-usuario"></strong></span>
-                <span id="rol-usuario" class="badge-rol"></span>
-                <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
-            </div>
-        </nav>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneXtion - Detalle de Solicitud</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">ConneXtion Soporte</div>
+        <div class="navbar-user">
+            <span>Hola, <strong id="nombre-usuario"></strong></span>
+            <span id="rol-usuario" class="badge-rol"></span>
+            <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+        </div>
+    </nav>
 
-        <div class="dashboard-container">
-            <div class="dashboard-header">
-                <h2>Detalle de Solicitud</h2>
-                <button onclick="window.location.href = 'dashboard.html'" class="btn-secondary">
-                    ← Volver
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <button onclick="window.location.href='dashboard.html'" class="btn-secondary btn-volver">
+                    Volver al panel
                 </button>
-                <button onclick="window.location.href='chat.html?id=' + new URLSearchParams(location.search).get('id')" class="btn-primary">
-                    Abrir Chat
-                </button>
+                <h2 style="margin:0;">Detalle de Solicitud</h2>
+            </div>
+            <button onclick="irAlChat()" class="btn-primary">
+                💬 Abrir Chat
+            </button>
+        </div>
+
+        <div id="mensaje-error" class="mensaje-error oculto"></div>
+        <div id="mensaje-exito" class="mensaje-exito oculto"></div>
+
+        <!-- Tarjeta principal -->
+        <div class="detalle-card">
+            <div class="detalle-header">
+                <div>
+                    <span id="ticket-id" class="ticket-id"></span>
+                    <h3 id="ticket-titulo"></h3>
+                </div>
+                <span id="ticket-estado" class="badge-estado"></span>
             </div>
 
-            <div id="mensaje-error" class="mensaje-error oculto"></div>
-            <div id="mensaje-exito" class="mensaje-exito oculto"></div>
-
-            <div class="detalle-card">
-                <div class="detalle-header">
-                    <div>
-                        <span id="ticket-id" class="ticket-id"></span>
-                        <h3 id="ticket-titulo"></h3>
-                    </div>
-                    <span id="ticket-estado" class="badge-estado"></span>
+            <div class="detalle-grid">
+                <div class="detalle-campo">
+                    <label>Cliente</label>
+                    <span id="ticket-cliente">—</span>
                 </div>
-
-                <div class="detalle-grid">
-                    <div class="detalle-campo">
-                        <label>Cliente</label>
-                        <span id="ticket-cliente"></span>
-                    </div>
-                    <div class="detalle-campo">
-                        <label>Categoría</label>
-                        <span id="ticket-categoria"></span>
-                    </div>
-                    <div class="detalle-campo">
-                        <label>Prioridad</label>
-                        <span id="ticket-prioridad" class="badge-prioridad"></span>
-                    </div>
-                    <div class="detalle-campo">
-                        <label>Fecha de creación</label>
-                        <span id="ticket-fecha"></span>
-                    </div>
-                    <div class="detalle-campo">
-                        <label>Técnico asignado</label>
-                        <span id="ticket-tecnico"></span>
-                    </div>
+                <div class="detalle-campo">
+                    <label>Categoría</label>
+                    <span id="ticket-categoria">—</span>
                 </div>
-
-                <div class="detalle-descripcion">
-                    <label>Descripción</label>
-                    <p id="ticket-descripcion"></p>
+                <div class="detalle-campo">
+                    <label>Prioridad</label>
+                    <span id="ticket-prioridad" class="badge-prioridad">—</span>
+                </div>
+                <div class="detalle-campo">
+                    <label>Fecha de creación</label>
+                    <span id="ticket-fecha">—</span>
+                </div>
+                <div class="detalle-campo">
+                    <label>Técnico asignado</label>
+                    <span id="ticket-tecnico">—</span>
                 </div>
             </div>
 
-            <div id="panel-notas" class="acciones-card mt-4">
-                <h3>Historial de Notas Técnicas</h3>
-
-                <div id="lista-notas" class="lista-comentarios-container">
-                    <p class="texto-vacio">No hay notas técnicas registradas para esta solicitud.</p>
-                </div>
-
-                <div id="formulario-nota" class="accion-seccion mt-3">
-                    <h4>Agregar Nota Técnica</h4>
-                    <div class="campo">
-                        <textarea id="texto-nota" rows="3" placeholder="Escriba los detalles del avance o resolución técnica..." maxlength="1000" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit; resize: vertical;"></textarea>
-                    </div>
-                    <div class="form-acciones" style="margin-top: 10px; justify-content: flex-end;">
-                        <button onclick="agregarNotaTecnica()" id="btn-guardar-nota" class="btn-primary">
-                            Guardar Nota
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="panel-acciones" class="acciones-card oculto">
-                <h3>Acciones</h3>
-
-                <div id="seccion-asignar" class="accion-seccion oculto">
-                    <h4>Asignar técnico</h4>
-                    <div class="accion-fila">
-                        <select id="select-tecnico">
-                            <option value="">— Seleccioná un técnico —</option>
-                        </select>
-                        <button onclick="asignarTecnico()" class="btn-primary btn-accion">
-                            Asignar
-                        </button>
-                    </div>
-                </div>
-
-                <div id="seccion-estado" class="accion-seccion">
-                    <h4>Cambiar estado</h4>
-                    <div class="accion-fila">
-                        <select id="select-estado">
-                            <option value="">— Seleccioná un estado —</option>
-                            <option value="ABIERTO">Abierto</option>
-                            <option value="EN_PROCESO">En Proceso</option>
-                            <option value="RESUELTO">Resuelto</option>
-                            <option value="CERRADO">Cerrado</option>
-                        </select>
-                        <button onclick="cambiarEstado()" class="btn-primary btn-accion">
-                            Actualizar
-                        </button>
-                    </div>
-                </div>
+            <div class="detalle-descripcion">
+                <label>Descripción</label>
+                <p id="ticket-descripcion"></p>
             </div>
         </div>
 
-        <script src="js/api.js"></script>
-        <script src="js/ui.js"></script>
-        <script>
-                            let ticketActual = null;
-                            const usuario = Ui.verificarSesion();
+        <!-- Notas técnicas -->
+        <div id="panel-notas" class="detalle-card">
+            <h3 style="font-size:17px; font-weight:700; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--gris-borde);">
+                📝 Historial de Notas Técnicas
+            </h3>
 
-                            if (usuario) {
-                                Ui.mostrarNombreUsuario(usuario);
-                                document.getElementById("rol-usuario").textContent = usuario.role;
+            <div id="lista-notas" class="lista-comentarios-container">
+                <p class="texto-vacio">No hay notas técnicas registradas para esta solicitud.</p>
+            </div>
 
-                                // Control de visibilidad del formulario de notas según rol
-                                if (usuario.role !== "TECHNICIAN" && usuario.role !== "SUPERVISOR" && usuario.role !== "SUPPORTER") {
-                                    document.getElementById("formulario-nota").classList.add("oculto");
-                                }
+            <div id="formulario-nota" class="agregar-nota-container">
+                <label>Agregar Nota Técnica</label>
+                <textarea id="texto-nota" rows="3" placeholder="Escriba los detalles del avance o resolución técnica..." maxlength="1000"></textarea>
+                <button onclick="agregarNotaTecnica()" id="btn-guardar-nota" class="btn-primary">
+                    Guardar Nota
+                </button>
+            </div>
+        </div>
 
-                                cargarTicket();
-                            }
+        <!-- Panel de acciones (solo soporte/supervisor) -->
+        <div id="panel-acciones" class="detalle-card oculto">
+            <h3 style="font-size:17px; font-weight:700; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--gris-borde);">
+                ⚙️ Acciones
+            </h3>
 
-                            function cargarTicket() {
-                                const params = new URLSearchParams(window.location.search);
-                                const id = params.get("id");
+            <div id="seccion-asignar" class="accion-seccion oculto">
+                <h4>Asignar técnico</h4>
+                <div class="accion-fila">
+                    <select id="select-tecnico">
+                        <option value="">— Seleccioná un técnico —</option>
+                    </select>
+                    <button onclick="asignarTecnico()" class="btn-primary btn-accion">
+                        Asignar
+                    </button>
+                </div>
+            </div>
 
-                                if (!id) {
-                                    Ui.mostrarError("mensaje-error", "No se especificó una solicitud.");
-                                    return;
-                                }
+            <div id="seccion-estado" class="accion-seccion">
+                <h4>Cambiar estado</h4>
+                <div class="accion-fila">
+                    <select id="select-estado">
+                        <option value="">— Seleccioná un estado —</option>
+                        <option value="ABIERTO">Abierto</option>
+                        <option value="EN_PROCESO">En Proceso</option>
+                        <option value="RESUELTO">Resuelto</option>
+                        <option value="CERRADO">Cerrado</option>
+                    </select>
+                    <button onclick="cambiarEstado()" class="btn-primary btn-accion">
+                        Actualizar Estado
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                                Api.obtenerTodosTickets()
-                                        .then(tickets => {
-                                            const ticket = tickets.find(t => t.id == id);
-                                            if (!ticket) {
-                                                Ui.mostrarError("mensaje-error", "Solicitud no encontrada.");
-                                                return;
-                                            }
-                                            ticketActual = ticket;
-                                            renderizarDetalle(ticket);
-                                            configurarAcciones(ticket);
-                                            cargarNotas(ticket.id);
-                                        })
-                                        .catch(() => {
-                                            Ui.mostrarError("mensaje-error", "Error al cargar la solicitud.");
-                                        });
-                            }
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        let ticketActual = null;
+        const usuario = Ui.verificarSesion();
 
-                            function renderizarDetalle(t) {
-                                document.getElementById("ticket-id").textContent = "#" + t.id;
-                                document.getElementById("ticket-titulo").textContent = t.title;
-                                document.getElementById("ticket-cliente").textContent = t.client ? t.client.name : "N/A";
-                                document.getElementById("ticket-categoria").textContent = t.category ? t.category.name : "N/A";
-                                document.getElementById("ticket-fecha").textContent = t.createdAt ? new Date(t.createdAt).toLocaleString() : "N/A";
-                                document.getElementById("ticket-descripcion").textContent = t.description;
-                                document.getElementById("ticket-tecnico").textContent = t.technician ? t.technician.name : "Sin asignar";
+        if (usuario) {
+            Ui.mostrarNombreUsuario(usuario);
+            document.getElementById("rol-usuario").textContent = usuario.role;
 
-                                const estadoEl = document.getElementById("ticket-estado");
-                                estadoEl.textContent = traducirEstado(t.status);
-                                estadoEl.className = "badge-estado " + t.status.toLowerCase();
+            if (usuario.role !== "TECHNICIAN" && usuario.role !== "SUPERVISOR" && usuario.role !== "SUPPORTER") {
+                document.getElementById("formulario-nota").classList.add("oculto");
+            }
 
-                                const prioridadEl = document.getElementById("ticket-prioridad");
-                                prioridadEl.textContent = t.priority || "N/A";
-                                prioridadEl.className = "badge-prioridad " + (t.priority ? t.priority.toLowerCase() : "");
+            cargarTicket();
+        }
 
-                                // Sincronizar el select de estado con el estado real del ticket al cargar
-                                const selectEstado = document.getElementById("select-estado");
-                                if (selectEstado) {
-                                    selectEstado.value = t.status;
-                                }
+        function irAlChat() {
+            const id = new URLSearchParams(location.search).get('id');
+            if (id) window.location.href = 'chat.html?id=' + id;
+        }
 
-                                // Si el ticket está cerrado, deshabilitar acciones comerciales/técnicas
-                                if (t.status === "CERRADO" || t.status === "CLOSED") {
-                                    const btnNota = document.getElementById("btn-guardar-nota");
-                                    const txtNota = document.getElementById("texto-nota");
-                                    if (btnNota)
-                                        btnNota.disabled = true;
-                                    if (txtNota) {
-                                        txtNota.disabled = true;
-                                        txtNota.placeholder = "Esta solicitud está cerrada. No se pueden agregar más notas.";
-                                    }
-                                }
-                            }
+        function cargarTicket() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get("id");
+            if (!id) {
+                Ui.mostrarError("mensaje-error", "No se especificó una solicitud.");
+                return;
+            }
 
-                            function configurarAcciones(ticket) {
-                                // Solo mostrar panel de acciones a empleados del sistema
-                                if (usuario.role === "SUPERVISOR" || usuario.role === "TECHNICIAN" || usuario.role === "SUPPORTER") {
-                                    document.getElementById("panel-acciones").classList.remove("oculto");
+            Api.obtenerTodosTickets()
+                .then(tickets => {
+                    const ticket = tickets.find(t => t.id == id);
+                    if (!ticket) {
+                        Ui.mostrarError("mensaje-error", "Solicitud no encontrada.");
+                        return;
+                    }
+                    ticketActual = ticket;
+                    renderizarDetalle(ticket);
+                    configurarAcciones(ticket);
+                    cargarNotas(ticket.id);
+                })
+                .catch(() => {
+                    Ui.mostrarError("mensaje-error", "Error al cargar la solicitud.");
+                });
+        }
 
-                                    if (usuario.role === "SUPERVISOR" || usuario.role === "TECHNICIAN") {
-                                        document.getElementById("seccion-asignar").classList.remove("oculto");
-                                        cargarTecnicos();
-                                    }
-                                }
-                            }
+        function renderizarDetalle(t) {
+            document.getElementById("ticket-id").textContent = "#" + t.id;
+            document.getElementById("ticket-titulo").textContent = t.title || t.category?.name || "Solicitud";
+            document.getElementById("ticket-cliente").textContent = t.client ? t.client.name : "N/A";
+            document.getElementById("ticket-categoria").textContent = t.category ? t.category.name : "N/A";
+            document.getElementById("ticket-fecha").textContent = t.createdAt
+                ? new Date(t.createdAt).toLocaleString('es-CR') : "N/A";
+            document.getElementById("ticket-descripcion").textContent = t.description;
+            document.getElementById("ticket-tecnico").textContent = t.technician
+                ? t.technician.name : "Sin asignar aún";
 
-                            function cargarTecnicos() {
-                                Api.obtenerUsuarios()
-                                        .then(usuarios => {
-                                            const tecnicos = usuarios.filter(u =>
-                                                u.role === "SUPPORTER" || u.role === "SUPERVISOR" || u.role === "TECHNICIAN"
-                                            );
-                                            const select = document.getElementById("select-tecnico");
-                                            select.innerHTML = '<option value="">— Seleccioná un técnico —</option>';
-                                            tecnicos.forEach(t => {
-                                                const opt = document.createElement("option");
-                                                opt.value = t.id;
-                                                opt.textContent = t.name + " (" + t.role + ")";
-                                                // Dejar pre-seleccionado el técnico actual si aplica
-                                                if (ticketActual.technician && ticketActual.technician.id === t.id) {
-                                                    opt.selected = true;
-                                                }
-                                                select.appendChild(opt);
-                                            });
-                                        })
-                                        .catch(() => {
-                                            console.error("No se pudieron cargar los técnicos.");
-                                        });
-                            }
+            const estadoEl = document.getElementById("ticket-estado");
+            estadoEl.textContent = traducirEstado(t.status);
+            estadoEl.className = "badge-estado " + t.status.toLowerCase();
 
-                            function asignarTecnico() {
-                                const tecnicoId = document.getElementById("select-tecnico").value;
-                                if (!tecnicoId) {
-                                    Ui.mostrarError("mensaje-error", "Seleccioná un técnico.");
-                                    return;
-                                }
-                                document.getElementById("mensaje-error").classList.add("oculto");
+            const prioridadEl = document.getElementById("ticket-prioridad");
+            if (t.priority) {
+                prioridadEl.textContent = t.priority;
+                prioridadEl.className = "badge-prioridad " + t.priority.toLowerCase();
+            } else {
+                prioridadEl.textContent = "No definida";
+                prioridadEl.className = "";
+                prioridadEl.style.color = "var(--texto-suave)";
+            }
 
-                                Api.asignarTecnico(ticketActual.id, tecnicoId)
-                                        .then(data => {
-                                            // El backend responde { ticket: {...}, threadResult: "..." }
-                                            const ticketAsignado = data && data.ticket ? data.ticket : data;
-                                            if (ticketAsignado && ticketAsignado.id) {
-                                                ticketActual = ticketAsignado;
-                                                renderizarDetalle(ticketAsignado);
-                                                const info = data && data.threadResult ? " (" + data.threadResult + ")" : "";
-                                                mostrarExito("✓ Técnico asignado correctamente." + info);
-                                            } else {
-                                                Ui.mostrarError("mensaje-error", "No se pudo asignar el técnico.");
-                                            }
-                                        })
-                                        .catch(() => {
-                                            Ui.mostrarError("mensaje-error", "Error al asignar el técnico.");
-                                        });
-                            }
+            const selectEstado = document.getElementById("select-estado");
+            if (selectEstado) selectEstado.value = t.status;
 
-                            function cambiarEstado() {
-                                const nuevoEstado = document.getElementById("select-estado").value;
-                                if (!nuevoEstado) {
-                                    Ui.mostrarError("mensaje-error", "Seleccioná un estado.");
-                                    return;
-                                }
-                                document.getElementById("mensaje-error").classList.add("oculto");
+            if (t.status === "CERRADO" || t.status === "CLOSED") {
+                const btnNota = document.getElementById("btn-guardar-nota");
+                const txtNota = document.getElementById("texto-nota");
+                if (btnNota) btnNota.disabled = true;
+                if (txtNota) {
+                    txtNota.disabled = true;
+                    txtNota.placeholder = "Esta solicitud está cerrada. No se pueden agregar más notas.";
+                }
+            }
+        }
 
-                                Api.actualizarEstado(ticketActual.id, nuevoEstado)
-                                        .then(data => {
-                                            // Forzar actualización local sin importar ligeras variantes del JSON del backend
-                                            if (data && data.id) {
-                                                ticketActual = data;
-                                            } else {
-                                                ticketActual.status = nuevoEstado;
-                                            }
-                                            renderizarDetalle(ticketActual);
-                                            mostrarExito("✓ Estado actualizado a: " + traducirEstado(nuevoEstado));
-                                        })
-                                        .catch((err) => {
-                                            console.error("Error al actualizar estado:", err);
-                                            Ui.mostrarError("mensaje-error", "Error al actualizar el estado.");
-                                        });
-                            }
+        function configurarAcciones(ticket) {
+            if (usuario.role === "SUPERVISOR" || usuario.role === "TECHNICIAN" || usuario.role === "SUPPORTER") {
+                document.getElementById("panel-acciones").classList.remove("oculto");
+                if (usuario.role === "SUPERVISOR" || usuario.role === "TECHNICIAN") {
+                    document.getElementById("seccion-asignar").classList.remove("oculto");
+                    cargarTecnicos();
+                }
+            }
+        }
 
-                            function cargarNotas(ticketId) {
-                                if (typeof Api.obtenerNotasPorTicket === "function") {
-                                    Api.obtenerNotasPorTicket(ticketId)
-                                            .then(notas => {
-                                                renderizarNotas(notas);
-                                            })
-                                            .catch(err => console.error("Error al cargar notas:", err));
-                                }
-                            }
+        function cargarTecnicos() {
+            Api.obtenerUsuarios()
+                .then(usuarios => {
+                    const tecnicos = usuarios.filter(u =>
+                        u.role === "SUPPORTER" || u.role === "SUPERVISOR" || u.role === "TECHNICIAN"
+                    );
+                    const select = document.getElementById("select-tecnico");
+                    select.innerHTML = '<option value="">— Seleccioná un técnico —</option>';
+                    tecnicos.forEach(t => {
+                        const opt = document.createElement("option");
+                        opt.value = t.id;
+                        opt.textContent = t.name + " (" + t.role + ")";
+                        if (ticketActual.technician && ticketActual.technician.id === t.id) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                })
+                .catch(() => console.error("No se pudieron cargar los técnicos."));
+        }
 
-                            function renderizarNotas(notas) {
-                                const listaContainer = document.getElementById("lista-notas");
-                                if (!notas || notas.length === 0) {
-                                    listaContainer.innerHTML = '<p class="texto-vacio">No hay notas técnicas registradas para esta solicitud.</p>';
-                                    return;
-                                }
+        function asignarTecnico() {
+            const tecnicoId = document.getElementById("select-tecnico").value;
+            if (!tecnicoId) { Ui.mostrarError("mensaje-error", "Seleccioná un técnico."); return; }
+            document.getElementById("mensaje-error").classList.add("oculto");
 
-                                listaContainer.innerHTML = "";
-                                notas.forEach(nota => {
-                                    const divNota = document.createElement("div");
-                                    divNota.style = "background: #f8f9fa; border-left: 4px solid #0056b3; padding: 10px; margin-bottom: 10px; border-radius: 0 4px 4px 0;";
+            Api.asignarTecnico(ticketActual.id, tecnicoId)
+                .then(data => {
+                    const ticketAsignado = data && data.ticket ? data.ticket : data;
+                    if (ticketAsignado && ticketAsignado.id) {
+                        ticketActual = ticketAsignado;
+                        renderizarDetalle(ticketAsignado);
+                        mostrarExito("✓ Técnico asignado correctamente.");
+                    } else {
+                        Ui.mostrarError("mensaje-error", "No se pudo asignar el técnico.");
+                    }
+                })
+                .catch(() => Ui.mostrarError("mensaje-error", "Error al asignar el técnico."));
+        }
 
-                                    const meta = document.createElement("small");
-                                    meta.style = "color: #666; font-weight: bold; display: block; margin-bottom: 4px;";
-                                    const fecha = nota.createdAt ? new Date(nota.createdAt).toLocaleString() : "Fecha N/A";
-                                    meta.textContent = `Por: ${nota.user ? nota.user.name : "Usuario"} - ${fecha}`;
+        function cambiarEstado() {
+            const nuevoEstado = document.getElementById("select-estado").value;
+            if (!nuevoEstado) { Ui.mostrarError("mensaje-error", "Seleccioná un estado."); return; }
+            document.getElementById("mensaje-error").classList.add("oculto");
 
-                                    const contenido = document.createElement("p");
-                                    contenido.style = "margin: 0; font-size: 14px; color: #333; white-space: pre-line;";
-                                    contenido.textContent = nota.text;
+            Api.actualizarEstado(ticketActual.id, nuevoEstado)
+                .then(data => {
+                    if (data && data.id) {
+                        ticketActual = data;
+                    } else {
+                        ticketActual.status = nuevoEstado;
+                    }
+                    renderizarDetalle(ticketActual);
+                    mostrarExito("✓ Estado actualizado a: " + traducirEstado(nuevoEstado));
+                })
+                .catch(() => Ui.mostrarError("mensaje-error", "Error al actualizar el estado."));
+        }
 
-                                    divNota.appendChild(meta);
-                                    divNota.appendChild(contenido);
-                                    listaContainer.appendChild(divNota);
-                                });
-                            }
+        function cargarNotas(ticketId) {
+            if (typeof Api.obtenerNotasPorTicket === "function") {
+                Api.obtenerNotasPorTicket(ticketId)
+                    .then(notas => renderizarNotas(notas))
+                    .catch(err => console.error("Error al cargar notas:", err));
+            }
+        }
 
-                            function agregarNotaTecnica() {
-                                const texto = document.getElementById("texto-nota").value.trim();
-                                if (!texto)
-                                    return;
+        function renderizarNotas(notas) {
+            const lista = document.getElementById("lista-notas");
+            if (!notas || notas.length === 0) {
+                lista.innerHTML = '<p class="texto-vacio">No hay notas técnicas registradas para esta solicitud.</p>';
+                return;
+            }
+            lista.innerHTML = "";
+            notas.forEach(nota => {
+                const autor = nota.user ? nota.user.name : "Usuario";
+                const fecha = nota.createdAt ? new Date(nota.createdAt).toLocaleString('es-CR') : "Fecha N/A";
+                const div = document.createElement("div");
+                div.className = "comentario-item";
+                div.innerHTML = `
+                    <div class="comentario-meta">
+                        <strong>${autor}</strong>
+                        <span>${fecha}</span>
+                    </div>
+                    <div class="comentario-texto">${nota.text}</div>
+                `;
+                lista.appendChild(div);
+            });
+        }
 
-                                const btn = document.getElementById("btn-guardar-nota");
-                                btn.disabled = true;
-                                btn.textContent = "Guardando...";
+        function agregarNotaTecnica() {
+            const texto = document.getElementById("texto-nota").value.trim();
+            if (!texto) return;
 
-                                const payload = {
-                                    ticketId: ticketActual.id,
-                                    userId: usuario.id,
-                                    text: texto
-                                };
+            const btn = document.getElementById("btn-guardar-nota");
+            btn.disabled = true;
+            btn.textContent = "Guardando...";
 
-                                // Usamos el fetch directamente pero sin recargar la página
-                                fetch('http://localhost:8080/api/comments/add', {
-                                    method: 'POST',
-                                    headers: {'Content-Type': 'application/json'},
-                                    body: JSON.stringify(payload)
-                                })
-                                        .then(response => {
-                                            if (!response.ok)
-                                                throw new Error("Error en el servidor");
-                                            return response.json();
-                                        })
-                                        .then(() => {
-                                            // 1. Limpiamos el campo
-                                            document.getElementById("texto-nota").value = "";
+            fetch('http://localhost:8080/api/comments/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ticketId: ticketActual.id, userId: usuario.id, text: texto })
+            })
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(() => {
+                document.getElementById("texto-nota").value = "";
+                cargarNotas(ticketActual.id);
+                mostrarExito("✓ Nota guardada correctamente.");
+                btn.disabled = false;
+                btn.textContent = "Guardar Nota";
+            })
+            .catch(() => {
+                Ui.mostrarError("mensaje-error", "Error al guardar la nota.");
+                btn.disabled = false;
+                btn.textContent = "Guardar Nota";
+            });
+        }
 
-                                            // 2. En lugar de recargar, volvemos a pedir solo las notas (más rápido y limpio)
-                                            cargarNotas(ticketActual.id);
+        function mostrarExito(mensaje) {
+            const exito = document.getElementById("mensaje-exito");
+            exito.textContent = mensaje;
+            exito.classList.remove("oculto");
+            setTimeout(() => exito.classList.add("oculto"), 3000);
+        }
 
-                                            mostrarExito("✓ Nota guardada correctamente.");
-                                            btn.disabled = false;
-                                            btn.textContent = "Guardar Nota";
-                                        })
-                                        .catch(() => {
-                                            Ui.mostrarError("mensaje-error", "Error de conexión al guardar la nota.");
-                                            btn.disabled = false;
-                                            btn.textContent = "Guardar Nota";
-                                        });
-                            }
-
-                            // Helper para reutilizar animaciones de éxito de la interfaz
-                            function mostrarExito(mensaje) {
-                                const exito = document.getElementById("mensaje-exito");
-                                exito.textContent = mensaje;
-                                exito.classList.remove("oculto");
-                                setTimeout(() => exito.classList.add("oculto"), 3000);
-                            }
-
-                            function traducirEstado(status) {
-                                const estados = {
-                                    "ABIERTO": "Abierto",
-                                    "ASIGNADO": "Asignado",
-                                    "EN_PROCESO": "En Proceso",
-                                    "RESUELTO": "Resuelto",
-                                    "CERRADO": "Cerrado",
-                                    "OPEN": "Abierto",
-                                    "IN_PROGRESS": "En Proceso",
-                                    "RESOLVED": "Resuelto",
-                                    "CLOSED": "Cerrado"
-                                };
-                                return estados[status] || status;
-                            }
-        </script>
-    </body>
+        function traducirEstado(status) {
+            const estados = {
+                "ABIERTO": "Abierto", "ASIGNADO": "Asignado",
+                "EN_PROCESO": "En Proceso", "RESUELTO": "Resuelto", "CERRADO": "Cerrado",
+                "OPEN": "Abierto", "IN_PROGRESS": "En Proceso",
+                "RESOLVED": "Resuelto", "CLOSED": "Cerrado"
+            };
+            return estados[status] || status;
+        }
+    </script>
+</body>
 </html>
