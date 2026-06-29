@@ -38,11 +38,6 @@
                         <label for="categoria">Categoría <span class="requerido">*</span></label>
                         <select id="categoria" required>
                             <option value="">— Seleccioná una categoría —</option>
-                            <option value="1">Facturación</option>
-                            <option value="2">Conectividad</option>
-                            <option value="3">Hardware</option>
-                            <option value="4">Software</option>
-                            <option value="5">Otro</option>
                         </select>
                     </div>
 
@@ -84,6 +79,21 @@
                             if (usuario) {
                                 Ui.mostrarNombreUsuario(usuario);
                             }
+
+                            // Cargar categorías desde el backend (evita IDs fijos que no existan en la BD)
+                            Api.obtenerCategorias()
+                                .then(categorias => {
+                                    const select = document.getElementById("categoria");
+                                    categorias.forEach(c => {
+                                        const opt = document.createElement("option");
+                                        opt.value = c.id;
+                                        opt.textContent = c.name;
+                                        select.appendChild(opt);
+                                    });
+                                })
+                                .catch(() => {
+                                    Ui.mostrarError("mensaje-error", "No se pudieron cargar las categorías. Verificá que el backend esté arriba.");
+                                });
 
                             // Manejar envío del formulario
                             document.getElementById("form-ticket").addEventListener("submit", function (e) {

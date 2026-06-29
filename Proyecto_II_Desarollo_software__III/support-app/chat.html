@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneXtion Soporte - Chat</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .chat-container { max-width: 700px; margin: 30px auto; padding: 0 16px; }
+        .chat-header {
+            background: #1a3c6b;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h3 { margin: 0; font-size: 1.1em; }
+        .chat-status { font-size:0.8em; padding:3px 10px; border-radius:12px; background:#ffc107; color:#333; font-weight:bold; }
+        .chat-status.conectado { background:#28a745; color:white; }
+        .chat-messages {
+            border: 1px solid #ddd; border-top: none;
+            height: 380px; overflow-y: auto;
+            background: #f9f9f9; padding: 16px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .mensaje { max-width: 75%; padding: 10px 14px; border-radius: 16px; font-size: 0.92em; line-height: 1.4; word-break: break-word; }
+        .mensaje.propio { align-self: flex-end; background: #1a3c6b; color: white; border-bottom-right-radius: 4px; }
+        .mensaje.otro { align-self: flex-start; background: white; border: 1px solid #ddd; color: #333; border-bottom-left-radius: 4px; }
+        .mensaje.sistema { align-self: center; background: transparent; color: #888; font-style: italic; font-size: 0.82em; border: none; padding: 4px; }
+        .mensaje-meta { font-size: 0.75em; margin-bottom: 3px; font-weight: bold; opacity: 0.8; }
+        .chat-input-area { display: flex; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; overflow: hidden; }
+        .chat-input-area input { flex: 1; padding: 14px 16px; border: none; outline: none; font-size: 0.95em; font-family: inherit; }
+        .chat-input-area button { padding: 14px 22px; background: #1a3c6b; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 0.95em; }
+        .chat-input-area button:disabled { background: #aaa; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">ConneXtion Soporte</div>
+        <div class="navbar-user">
+            <span>Bienvenido, <strong id="nombre-usuario"></strong></span>
+            <span id="rol-usuario" class="badge-rol"></span>
+            <button onclick="Ui.cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h2>Chat de Soporte — Solicitud <span id="ticket-ref"></span></h2>
+            <button onclick="window.location.href='detalle.html?id=' + ticketId" class="btn-secondary">
+                ← Volver al detalle
+            </button>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3 id="chat-titulo">Chat en tiempo real</h3>
+                <span id="estado-conexion" class="chat-status">Conectando...</span>
+            </div>
+            <div id="mensajes" class="chat-messages">
+                <div class="mensaje sistema">Conectando al canal del ticket...</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="input-mensaje"
+                       placeholder="Escribe tu respuesta al cliente..."
+                       maxlength="500"
+                       onkeydown="if(event.key==='Enter') enviarMensaje()">
+                <button id="btn-enviar" onclick="enviarMensaje()" disabled>Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        const usuario  = Ui.verificarSesion();
+        const params   = new URLSearchParams(window.location.search);
+        const ticketId = params.get("id");
+        let stompClient = null;
+
+        if (!ticketId) window.location.href = "dashboard.html";
+
+        if (usuario) {
+            Ui.mostrarNombreUsuario(usuario);
+            document.getElementById("rol-usuario").textContent = usuario.role;
+            document.getElementById("ticket-ref").textContent = "#" + ticketId;
+            document.getElementById("chat-titulo").textContent = "Chat — Solicitud #" + ticketId;
+            conectarWebSocket();
+        }
+
+        function conectarWebSocket() {
+            const socket = new SockJS("http://localhost:8080/ws");
+            stompClient = Stomp.over(socket);
+            stompClient.debug = null;
+
+            stompClient.connect({}, function () {
+                const badge = document.getElementById("estado-conexion");
+                badge.textContent = "Conectado";
+                badge.classList.add("conectado");
+                document.getElementById("btn-enviar").disabled = false;
+
+                stompClient.subscribe("/topic/ticket/" + ticketId, function (frame) {
+                    mostrarMensaje(JSON.parse(frame.body));
+                });
+
+                stompClient.send("/app/chat.join", {}, JSON.stringify({
+                    sender: usuario.name + " [" + usuario.role + "]",
+                    ticketId: parseInt(ticketId),
+                    type: "JOIN",
+                    content: ""
+                }));
+
+            }, function () {
+                const badge = document.getElementById("estado-conexion");
+                badge.textContent = "Sin conexión";
+                badge.classList.remove("conectado");
+                document.getElementById("btn-enviar").disabled = true;
+            });
+        }
+
+        function enviarMensaje() {
+            const input = document.getElementById("input-mensaje");
+            const texto = input.value.trim();
+            if (!texto || !stompClient || !stompClient.connected) return;
+
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify({
+                sender: usuario.name + " [Soporte]",
+                ticketId: parseInt(ticketId),
+                type: "CHAT",
+                content: texto
+            }));
+
+            input.value = "";
+            input.focus();
+        }
+
+        function mostrarMensaje(msg) {
+            if (msg.type === "JOIN" || msg.type === "LEAVE") {
+                agregarMensajeSistema(msg.content);
+                return;
+            }
+            const esPropio = msg.sender.startsWith(usuario.name);
+            const contenedor = document.getElementById("mensajes");
+            const div = document.createElement("div");
+            div.className = "mensaje " + (esPropio ? "propio" : "otro");
+
+            const meta = document.createElement("div");
+            meta.className = "mensaje-meta";
+            meta.textContent = esPropio ? "Tú" : msg.sender;
+
+            const texto = document.createElement("div");
+            texto.textContent = msg.content;
+
+            const hora = document.createElement("div");
+            hora.style.cssText = "font-size:0.72em; opacity:0.7; margin-top:4px; text-align:right;";
+            hora.textContent = msg.timestamp || new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+
+            div.appendChild(meta);
+            div.appendChild(texto);
+            div.appendChild(hora);
+            contenedor.appendChild(div);
+            contenedor.scrollTop = contenedor.scrollHeight;
+        }
+
+        function agregarMensajeSistema(texto) {
+            const contenedor = document.getElementById("mensajes");
+            const div = document.createElement("div");
+            div.className = "mensaje sistema";
+            div.textContent = texto;
+            contenedor.appendChild(div);
+            contenedor.scrollTop = contenedor.scrollHeight;
+        }
+    </script>
+</body>
+</html>

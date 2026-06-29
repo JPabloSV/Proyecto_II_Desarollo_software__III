@@ -10,13 +10,11 @@ const Api = {
     },
 
     obtenerTodosTickets: function() {
-        return fetch(`${API_URL}/tickets`)
-            .then(res => res.json());
+        return fetch(`${API_URL}/tickets`).then(res => res.json());
     },
 
     obtenerTicketPorId: function(id) {
-        return fetch(`${API_URL}/tickets/${id}`)
-            .then(res => res.json());
+        return fetch(`${API_URL}/tickets/${id}`).then(res => res.json());
     },
 
     asignarTecnico: function(ticketId, tecnicoId) {
@@ -34,8 +32,35 @@ const Api = {
     },
 
     obtenerUsuarios: function() {
-        return fetch(`${API_URL}/users`)
-            .then(res => res.json());
+        return fetch(`${API_URL}/users`).then(res => res.json());
+    },
+
+    obtenerServicios: function() {
+        return fetch(`${API_URL}/services`).then(res => res.json());
+    },
+
+    // GET /api/comments/ticket/{ticketId} — endpoint que faltaba
+    obtenerNotasPorTicket: function(ticketId) {
+        return fetch(`${API_URL}/comments/ticket/${ticketId}`).then(res => res.json());
+    },
+
+    agregarComentario: function(ticketId, userId, texto) {
+        return fetch(`${API_URL}/comments/add`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ticketId, userId, text: texto })
+        }).then(res => {
+            if (!res.ok) throw new Error("Error al guardar el comentario.");
+            return res.json();
+        });
+    },
+
+    registrarUsuarioSoporte: function(usuario) {
+        return fetch(`${API_URL}/support-users`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(usuario)
+        }).then(res => res.json());
     },
 
     logout: function() {

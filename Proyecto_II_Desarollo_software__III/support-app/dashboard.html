@@ -19,14 +19,17 @@
     <div class="dashboard-container">
         <div class="dashboard-header">
             <h2>Solicitudes Registradas</h2>
-            <div class="filtros">
-                <select id="filtro-estado" onchange="filtrarSolicitudes()">
-                    <option value="">Todos los estados</option>
-                    <option value="ABIERTO">Abierto</option>
-                    <option value="EN_PROCESO">En Proceso</option>
-                    <option value="RESUELTO">Resuelto</option>
-                    <option value="CERRADO">Cerrado</option>
-                </select>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <div class="filtros">
+                    <select id="filtro-estado" onchange="filtrarSolicitudes()">
+                        <option value="">Todos los estados</option>
+                        <option value="ABIERTO">Abierto</option>
+                        <option value="EN_PROCESO">En Proceso</option>
+                        <option value="RESUELTO">Resuelto</option>
+                        <option value="CERRADO">Cerrado</option>
+                    </select>
+                </div>
+                <span id="btn-registrar-soporte"></span>
             </div>
         </div>
 
@@ -62,6 +65,12 @@
         if (usuario) {
             Ui.mostrarNombreUsuario(usuario);
             document.getElementById("rol-usuario").textContent = usuario.role;
+
+            // Show "Register support user" button only to supervisors
+            if (usuario.isSupervisor || usuario.role === "SUPERVISOR") {
+                document.getElementById("btn-registrar-soporte").innerHTML =
+                    '<button onclick="window.location.href=\'registrar-soporte.html\'" class="btn-primary">+ Registrar Soportista</button>';
+            }
 
             Api.obtenerTodosTickets()
             .then(solicitudes => {
